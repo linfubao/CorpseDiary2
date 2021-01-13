@@ -81,6 +81,10 @@ export default class GameMag extends cc.Component {
      * 上传的打点数据
      */
     uploadData: any = null;
+    /**
+     * 任务列表
+     */
+    taskTypeArr: number[] = null;
 
     /*游戏数据*/
     homeScene: string = "Home";
@@ -121,14 +125,22 @@ export default class GameMag extends cc.Component {
      * taskType  0:无尽模式 1:击杀模式 2:距离模式 3:时间模式  4:击杀+时间模式 5:距离+时间模式
      */
     taskType: number = null; //当前的关卡代号
-    taskTypeArr: number[] = [];
     roleBlood: number = 1;  //玩家血量
     timeStart: number = null; //结算的时候拿来显示的本关用时
     timeOver: boolean = false; //是否倒计时到了
     runOver: boolean = false; //是否到达终点
     killOver: boolean = false; //是否完成本关的击杀数任务
-    missionData: any = { killNum: null, moveNum: null, secondNum: null, coinNum: null, diamondNum: null };//当前关卡的任务内容
+    defenseOver: boolean = false; //是否完成本关的防御任务
+    getKeyOver: boolean = false; //是否完成本关的钥匙收集任务
 
+    /**
+     * 用来记录当前关卡的任务内容
+     */
+    missionData: any = { killNum: null, moveNum: null, secondNum: null, defenseNum: null, keyNum: null, coinNum: null, diamondNum: null };
+
+    cleanMissionData() {
+        this.missionData = { killNum: null, moveNum: null, secondNum: null, defenseNum: null, keyNum: null, coinNum: null, diamondNum: null };
+    }
     removeAllLocalData() {
         cc.sys.localStorage.removeItem('currency');
         cc.sys.localStorage.removeItem('level');
@@ -145,6 +157,7 @@ export default class GameMag extends cc.Component {
         cc.sys.localStorage.removeItem('reviveTimes');
         cc.sys.localStorage.removeItem('rewardBuff');
         cc.sys.localStorage.removeItem('uploadData');
+        cc.sys.localStorage.removeItem('taskTypeArr');
     }
     initLocalStorageData() {
         this.initLevel();
@@ -157,13 +170,33 @@ export default class GameMag extends cc.Component {
         this.initAchieveData();
         this.initAchieveRecordData();
         this.initTaskData();
-        this.initGuide();
-        this.initSignData();
-        this.initReviveTimes();
-        this.initRewardBuff();
-        this.initUploadData();
+        this.initTaskTypeArr();
+        // this.initGuide();
+        // this.initSignData();
+        // this.initReviveTimes();
+        // this.initRewardBuff();
+        // this.initUploadData();
+
         // this.initMusicStatus();
     }
+    initTaskTypeArr() {
+        let data = cc.sys.localStorage.getItem("taskTypeArr");
+        if (!data) {
+            cc.sys.localStorage.setItem("taskTypeArr", JSON.stringify([]));
+            this.taskTypeArr = [];
+        } else {
+            this.taskTypeArr = JSON.parse(data);
+        }
+    }
+    /**
+     * 更新关卡列表
+     * @param newData 
+     */
+    updateTaskTypeArr(newData) {
+        this.taskTypeArr = newData;
+        cc.sys.localStorage.setItem("taskTypeArr", JSON.stringify(this.taskTypeArr));
+    }
+    //打点数据
     initUploadData() {
         /**
          * enterTimes:第几次进入游戏;
@@ -340,6 +373,7 @@ export default class GameMag extends cc.Component {
             this.level = JSON.parse(num);
         }
     }
+    //关卡+1
     updateLevel() {
         this.level++;
         this.updateAchieveRecord(3);
@@ -1009,4 +1043,7 @@ export default class GameMag extends cc.Component {
  * 15. 机甲的子弹伤害区域
  * 16. 长舌怪的区域
  * 18. 冰子弹
+ * 19. 防御区域(旋涡)
+ * 20. 要护送的小弟,我叫他baby
+ * 21. 游戏中出现的钥匙(钥匙任务的钥匙)
  */

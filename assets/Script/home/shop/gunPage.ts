@@ -193,18 +193,18 @@ export default class GunPage extends cc.Component {
         this.freshDownContent();
         this.freshEquipBtns();
         this.onEquipBtn();
-        if (data.buyType === 1 && !cc.sys.isBrowser) {
-            const data = GameMag.Ins.uploadData;
-            data.diamondGun++;
-            GameMag.Ins.updateUploadData(data);//更新本地数据
-            //玩家使用钻石武器的数量
-            //@ts-ignore
-            wx.reportUserBehaviorBranchAnalytics({
-                branchId: 'BCBgAAoXHx5d138Ug9YRx8',
-                branchDim: `${data.diamondGun}`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
-                eventType: 2 // 1：曝光； 2：点击
-            })
-        }
+        // if (data.buyType === 1 && !cc.sys.isBrowser) {
+        //     const data = GameMag.Ins.uploadData;
+        //     data.diamondGun++;
+        //     GameMag.Ins.updateUploadData(data);//更新本地数据
+        //     //玩家使用钻石武器的数量
+        //     //@ts-ignore
+        //     wx.reportUserBehaviorBranchAnalytics({
+        //         branchId: 'BCBgAAoXHx5d138Ug9YRx8',
+        //         branchDim: `${data.diamondGun}`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
+        //         eventType: 2 // 1：曝光； 2：点击
+        //     })
+        // }
     }
     //武器装备
     onEquipBtn() {

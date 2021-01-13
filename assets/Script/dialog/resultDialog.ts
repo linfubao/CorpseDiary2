@@ -88,16 +88,16 @@ export default class ResultDialog extends cc.Component {
     getBoxData: any = null;
 
     onInit(status) {
-        const lv = GameMag.Ins.level;
-        if (lv <= 10) {
-            //结束游戏用户数量
-            //@ts-ignore
-            wx.reportUserBehaviorBranchAnalytics({
-                branchId: 'BCBgAAoXHx5d138Ug9YRx-',
-                branchDim: `${lv}`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
-                eventType: 1 // 1：曝光； 2：点击
-            });
-        }
+        // const lv = GameMag.Ins.level;
+        // if (lv <= 10) {
+        //     //结束游戏用户数量
+        //     //@ts-ignore
+        //     wx.reportUserBehaviorBranchAnalytics({
+        //         branchId: 'BCBgAAoXHx5d138Ug9YRx-',
+        //         branchDim: `${lv}`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
+        //         eventType: 1 // 1：曝光； 2：点击
+        //     });
+        // }
         this.gameSuccess = status;
         this.showMoreGame();
         DialogMag.Ins.removePlane(DialogPath.PauseDialog);
@@ -108,18 +108,12 @@ export default class ResultDialog extends cc.Component {
         this.tryBtn1.on(cc.Node.EventType.TOUCH_END, this.onTryBtn1, this);
         this.rewardBtn2.on(cc.Node.EventType.TOUCH_END, this.onRewardBtn2, this);
         if (status) {
-            GameMag.Ins.updateLevel();
+            // GameMag.Ins.updateLevel();
             AudioMag.getInstance().playSound("胜利");
             this.showSuccess();
             return;
         }
         this.popupNode.active = true;
-        const times = GameMag.Ins.reviveTimes.times;
-        if (times % 2 == 0) { //偶数看视频
-            this.popupText.string = String("观看视频,免费复活");
-            return;
-        }
-        this.popupText.string = String("分享好友,免费复活");
     }
     showMoreGame() {
         // this.getBoxData = [1, 1, 1];
@@ -186,13 +180,13 @@ export default class ResultDialog extends cc.Component {
     }
     showSuccess() {
         let taskTypeArr = GameMag.Ins.taskTypeArr;
-        let arr = [];
-        for (let i = 0; i < taskTypeArr.length; i++) {
-            if (taskTypeArr[i] != GameMag.Ins.taskType) {
-                arr.push(taskTypeArr[i]);
-            }
+        const index = taskTypeArr.indexOf(GameMag.Ins.taskType);
+        taskTypeArr.splice(index, 1); //把完成的任务从任务列表删除
+        GameMag.Ins.updateTaskTypeArr(taskTypeArr);
+        console.log(GameMag.Ins.taskType, index);
+        if (taskTypeArr.length == 0 || (GameMag.Ins.taskTypeArr.length == 1 && GameMag.Ins.taskTypeArr[0] === 0)) {
+            GameMag.Ins.updateLevel();
         }
-        GameMag.Ins.taskTypeArr = arr;
         this.successNode.scale = 0;
         this.successNode.active = true;
         cc.tween(this.successNode)
@@ -215,32 +209,18 @@ export default class ResultDialog extends cc.Component {
      */
     onOK() {
         AudioMag.getInstance().playSound("按钮音");
-        const times = GameMag.Ins.reviveTimes.times;
-        console.log(times);
-        if (times % 2 == 0) { //偶数看视频
-            console.log("看视频");
-            this.reviveSuccess();
-        } else {
-            console.log("分享好友");
-            this.reviveSuccess();
-        }
         //等哪天又想用钻石复活了再打开这段代码
         // let diamond = GameMag.Ins.currency.diamond;
         // if (diamond >= GameMag.Ins.reviveDiamod) {
-        //     GameMag.Ins.updateCurrency(1, -GameMag.Ins.reviveDiamod);
-        //     cc.director.emit("updateCurrency");
-        //     cc.director.emit("revive");
-        //     cc.director.emit("reviveInitRoleBlood");
-        //     DialogMag.Ins.removePlane(DialogPath.ResultDialog);
+        // GameMag.Ins.updateCurrency(1, -GameMag.Ins.reviveDiamod);
+        // cc.director.emit("updateCurrency");
+        cc.director.emit("revive");
+        cc.director.emit("reviveInitRoleBlood");
+        cc.director.emit("reviveInitBabyBlood");
+        DialogMag.Ins.removePlane(DialogPath.ResultDialog);
         // } else {
         //     DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["钻石不足"]);
         // }
-    }
-    reviveSuccess() {
-        GameMag.Ins.updateReviveTimes();
-        cc.director.emit("revive");
-        cc.director.emit("reviveInitRoleBlood");
-        DialogMag.Ins.removePlane(DialogPath.ResultDialog);
     }
     onDestroy() {
         GameMag.Ins.gameOver = false;

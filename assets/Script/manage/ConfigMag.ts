@@ -583,7 +583,7 @@ const gunData = [
 /**
  * armor    护甲
  * speed    速度
- * blood    血量
+ * blood    血量*10
  * buyType     购买方式0:金币  1:砖石
  * costNum     购买花费的金额
  */

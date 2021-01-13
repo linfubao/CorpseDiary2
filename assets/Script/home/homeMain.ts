@@ -35,22 +35,12 @@ export default class HomeMain extends cc.Component {
     taskBtn: cc.Node = null;
     @property(cc.Label)
     levelLab: cc.Label = null;
-    @property({ type: [cc.Node], tooltip: "任务图标" })
-    taskNode: cc.Node[] = [];
     @property({ type: [cc.Vec2], tooltip: "显示任务图标的坐标" })
-    taskPos: cc.Vec2[] = []; //逆时针
+    taskPos: cc.Vec2[] = []; //从左到右
     @property(cc.Node)
     taskBox: cc.Node = null;
-    @property(cc.Node)
-    defaultBg: cc.Node = null;
-    @property(cc.Node)
-    updateBg: cc.Node = null;
     @property(cc.Prefab)
     circle: cc.Prefab = null;
-    @property(cc.Node)
-    redLight: cc.Node = null;
-    @property(cc.Node)
-    light: cc.Node = null;
     @property({ type: cc.Node, tooltip: "单个的互推icon轮播" })
     singleCarousel: cc.Node = null;
     @property(cc.Sprite)
@@ -76,7 +66,7 @@ export default class HomeMain extends cc.Component {
     updateBgDis: number = 22;//绿屏的移动速度
     gunNogetData: any = null; //首页的试用武器下标
     buffInitTime: number = 6 * 60 * 60; //buff重置时间:6小时
-    startTime: number = 0;
+    // startTime: number = 0;
     singleCaroData: any = null;
     singleData: any = null;
 
@@ -85,18 +75,19 @@ export default class HomeMain extends cc.Component {
         GameMag.Ins.updateAchieveRecord(2);
     }
     onLoad() {
-        this.startTime = new Date().getTime();
+        // this.startTime = new Date().getTime();
         AudioMag.getInstance().playBGM("BGM");
         cc.director.getCollisionManager().enabled = true;
         // cc.director.getCollisionManager().enabledDebugDraw = true;
         cc.director.getPhysicsManager().enabled = true;
         // cc.director.getPhysicsManager().debugDrawFlags = cc.PhysicsManager.DrawBits.e_aabbBit | cc.PhysicsManager.DrawBits.e_jointBit | cc.PhysicsManager.DrawBits.e_shapeBit;
         this.initUI();
-        this.initTryGun();
+        // this.initTryGun();
+        this.showLevelTask();
         this.judgeTaskArrow();
         this.judgeAchieve();
-        this.initMoreGame();
-        this.initRewardBuff();
+        // this.initMoreGame();
+        // this.initRewardBuff();
         this.gameEvents();
     }
     initRewardBuff() {
@@ -189,29 +180,20 @@ export default class HomeMain extends cc.Component {
         GameMag.Ins.tryGunEquip = null;
         const lv = GameMag.Ins.level;
         this.levelLab.string = String("第" + lv + "天");
-        if (!GameMag.Ins.guide[0]) {
-            DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [0, 0, cc.v2(0, -230)]);
-        }
-        if (GameMag.Ins.guide[0]) {
-            this.initBackground();
-        }
-        if (lv > 1 && !GameMag.Ins.guide[7]) {
-            const ps = cc.v2(this.shopBtn.x, this.shopBtn.y - 70);
-            DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [7, 0, cc.Vec2.ZERO, cc.v2(ps.x, ps.y)]);
-        }
+        // if (!GameMag.Ins.guide[0]) {
+        //     DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [0, 0, cc.v2(0, -230)]);
+        // }
+        // if (GameMag.Ins.guide[0]) {
+        //     this.initBackground();
+        // }
+        // this.initBackground();
+        // if (lv > 1 && !GameMag.Ins.guide[7]) {
+        //     const ps = cc.v2(this.shopBtn.x, this.shopBtn.y - 70);
+        //     DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [7, 0, cc.Vec2.ZERO, cc.v2(ps.x, ps.y)]);
+        // }
         cc.tween(this.taskBtnLight)
             .repeatForever(
-                cc.tween().to(1.5, { scale: 2.5, opacity: 130 }).delay(0.1).to(1.5, { scale: 1.7, opacity: 80 }).delay(0.15)
-            )
-            .start();
-        cc.tween(this.redLight)
-            .repeatForever(
-                cc.tween().to(1.2, { scale: 3.5 }).delay(0.1).to(1.2, { scale: 1.5 }).delay(0.2)
-            )
-            .start();
-        cc.tween(this.light)
-            .repeatForever(
-                cc.tween().to(2, { angle: 12 }).delay(0.1).to(2, { angle: 0 }).delay(0.2)
+                cc.tween().to(1.5, { scale: 2, opacity: 130 }).delay(0.1).to(1.5, { scale: 1.7, opacity: 80 }).delay(0.15)
             )
             .start();
         this.shakeIcon(this.taskBtn);
@@ -277,36 +259,37 @@ export default class HomeMain extends cc.Component {
     }
     gameEvents() {
         this.levelLab.node.on(cc.Node.EventType.TOUCH_END, function () {
-            // GameMag.Ins.removeAllLocalData(); //上线后记得代码删除
+            GameMag.Ins.removeAllLocalData(); //上线后记得代码删除
         }, this);
         cc.game.off(cc.game.EVENT_SHOW);
         cc.game.on(cc.game.EVENT_SHOW, function () {
             console.log("进入游戏");
+            AudioMag.getInstance().playBGM("BGM");
             this.schedule(this.timer, 60);
         }.bind(this), this);
         cc.game.off(cc.game.EVENT_HIDE);
         cc.game.on(cc.game.EVENT_HIDE, function () {
             console.log("退出游戏");
             this.unschedule(this.timer);
-            const data = GameMag.Ins.uploadData;
-            if (!cc.sys.isBrowser && !data.firstInToday.status) {
-                const t = new Date().getTime();
-                const diff = Math.floor((t - this.startTime) / 1000);
-                // 每个用户每日首次进入使用时长
-                //@ts-ignore
-                wx.reportUserBehaviorBranchAnalytics({
-                    branchId: 'BCBgAAoXHx5d138Ug9YRx6',
-                    branchDim: `${diff}`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
-                    eventType: 1 // 1：曝光； 2：点击
-                });
-            }
+            // const data = GameMag.Ins.uploadData;
+            // if (!cc.sys.isBrowser && !data.firstInToday.status) {
+            //     const t = new Date().getTime();
+            //     const diff = Math.floor((t - this.startTime) / 1000);
+            //     // 每个用户每日首次进入使用时长
+            //     //@ts-ignore
+            //     wx.reportUserBehaviorBranchAnalytics({
+            //         branchId: 'BCBgAAoXHx5d138Ug9YRx6',
+            //         branchDim: `${diff}`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
+            //         eventType: 1 // 1：曝光； 2：点击
+            //     });
+            // }
         }.bind(this), this);
 
-        cc.director.on("initBackground", this.initBackground, this);
+        // cc.director.on("initBackground", this.initBackground, this);
         cc.director.on("judgeTaskArrow", this.judgeTaskArrow, this);
         cc.director.on("judgeAchieve", this.judgeAchieve, this);
         this.backBtn.on(cc.Node.EventType.TOUCH_END, this.onBack, this);
-        this.startBtn.on(cc.Node.EventType.TOUCH_END, this.onStartGame, this);
+        // this.startBtn.on(cc.Node.EventType.TOUCH_END, this.onStartGame, this);
         this.shopBtn.on(cc.Node.EventType.TOUCH_END, this.onShopBtn, this);
         this.achieveBtn.on(cc.Node.EventType.TOUCH_END, this.onAchieveBtn, this);
         this.taskBtn.on(cc.Node.EventType.TOUCH_END, this.onTaskBtn, this);
@@ -322,38 +305,38 @@ export default class HomeMain extends cc.Component {
             }.bind(this));
         }, this);
     }
-    initBackground() {
-        this.taskBox.children.forEach(item => {
-            item.active = false;
-        })
-        this.scheduleOnce(() => {
-            this.showUpdateBg();
-        }, 0.3);
-    }
-    showUpdateBg() {
-        AudioMag.getInstance().playSound("地图");
-        this.schedule(this.bgMoveLeft, 0.016);
-    }
-    bgMoveLeft() {
-        this.updateBg.width += this.updateBgDis;
-        this.updateBg.getChildByName("light").x = this.updateBg.width;
-        if (this.updateBg.width >= this.defaultBg.width) {
-            this.unschedule(this.bgMoveLeft);
-            this.showLevelTask();
-            this.schedule(this.bgMoveRight, 0.016);
-        }
-    }
-    bgMoveRight() {
-        this.updateBg.width -= this.updateBgDis;
-        this.updateBg.getChildByName("light").x = this.updateBg.width;
-        if (this.updateBg.width < 0) {
-            let todaySign = GameMag.Ins.signInData.todaySign;
-            if (!todaySign && GameMag.Ins.guide[1]) {
-                DialogMag.Ins.show(DialogPath.SignInDialog, DialogScript.SignInDialog, []);
-            }
-            this.unschedule(this.bgMoveRight);
-        }
-    }
+    // initBackground() {
+    //     this.taskBox.children.forEach(item => {
+    //         item.active = false;
+    //     })
+    //     this.scheduleOnce(() => {
+    //         this.showUpdateBg();
+    //     }, 0.3);
+    // }
+    // showUpdateBg() {
+    //     AudioMag.getInstance().playSound("地图");
+    //     this.schedule(this.bgMoveLeft, 0.016);
+    // }
+    // bgMoveLeft() {
+    //     this.updateBg.width += this.updateBgDis;
+    //     this.updateBg.getChildByName("light").x = this.updateBg.width;
+    //     if (this.updateBg.width >= this.defaultBg.width) {
+    //         this.unschedule(this.bgMoveLeft);
+    //         this.showLevelTask();
+    //         this.schedule(this.bgMoveRight, 0.016);
+    //     }
+    // }
+    // bgMoveRight() {
+    //     this.updateBg.width -= this.updateBgDis;
+    //     this.updateBg.getChildByName("light").x = this.updateBg.width;
+    //     if (this.updateBg.width < 0) {
+    //         // let todaySign = GameMag.Ins.signInData.todaySign;
+    //         // if (!todaySign && GameMag.Ins.guide[1]) {
+    //         //     DialogMag.Ins.show(DialogPath.SignInDialog, DialogScript.SignInDialog, []);
+    //         // }
+    //         this.unschedule(this.bgMoveRight);
+    //     }
+    // }
     onBack() {
         ToolsMag.Ins.buttonAction(this.backBtn, function () {
             this.loginPage.active = true;
@@ -369,13 +352,13 @@ export default class HomeMain extends cc.Component {
             }.bind(this));
         })
     }
-    onStartGame() {
-        let self = this;
-        ToolsMag.Ins.buttonAction(this.startBtn, function () {
-            self.loginPage.active = false;
-            self.initBackground();
-        }.bind(this));
-    }
+    // onStartGame() {
+    //     let self = this;
+    //     ToolsMag.Ins.buttonAction(this.startBtn, function () {
+    //         self.loginPage.active = false;
+    //         self.initBackground();
+    //     }.bind(this));
+    // }
     onShopBtn() {
         ToolsMag.Ins.buttonAction(this.shopBtn, function () {
             DialogMag.Ins.show(DialogPath.ShopDialog, DialogScript.ShopDialog, []);
@@ -457,32 +440,6 @@ export default class HomeMain extends cc.Component {
             }
         }
     }
-    getTaskRandom(): number[] {
-        let len = null;
-        let lv = GameMag.Ins.level;
-        let arr = null;
-        if (lv < 2) {
-            arr = [1]; //第一关固定分配击杀任务
-            len = 1;
-        } else if (lv >= 2 && lv <= 3) {
-            arr = [1, 2, 3];
-            len = 2;
-        } else if (lv >= 4 && lv <= 6) {
-            arr = [1, 2, 3, 4, 5];
-            len = 3;
-        } else {
-            arr = [1, 2, 3, 4, 5];
-            len = 4;
-        }
-        arr.sort(() => Math.random() - 0.5);//随机打乱
-        let flag = 6;  //第6关才开始有无尽模式
-        if (lv >= flag) {
-            arr.unshift(0);
-        }
-        let newArr = arr.slice(0, len);
-        // console.log(newArr);
-        return newArr;
-    }
     initTryGun() {
         let gunNogetData = [];
         GameMag.Ins.gunData.forEach(item => {
@@ -549,8 +506,43 @@ export default class HomeMain extends cc.Component {
             .start();
     }
     /**
+     * 规则
+     * 1.
+     * 
+     */
+    getTaskRandom(): number[] {
+        let len = null; //出现的任务个数,不含无尽模式
+        let lv = GameMag.Ins.level;
+        let arr = null; //任务内容,规定哪些关卡应该只出现哪些任务
+        if (lv == 1) {
+            arr = [1]; //第一关固定分配击杀任务
+            len = 1;
+        } else if (lv == 2) {
+            arr = [1, 2, 3, 4, 5];
+            len = 2;
+        } else if (lv == 3 || lv == 4) {
+            arr = [1, 2, 3, 4, 5];
+            len = 3;
+        } else if (lv == 5) { //第6关之前不出现复合任务和钥匙任务
+            arr = [1, 2, 3, 4, 5];
+            len = 4;
+        } else { //第6关之后才开始有钥匙相关模式
+            arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            len = 5;
+        }
+        arr.sort(() => Math.random() - 0.5);//随机打乱
+        let flag = 6;  //第6关才开始有无尽模式
+        if (lv >= flag) {
+            arr.unshift(0);
+        }
+        let newArr = arr.slice(0, len);//随机打乱后直接截取需要的前几个
+        // console.log(newArr);
+        return newArr;
+    }
+    /**
+     * 显示首页的任务图标
      * 注意:节点的排序也得按这个顺序
-     * 0: //无尽模式 1: //击杀模式 2: //距离模式 3: //时间模式  4//击杀+时间模式 5: //距离+时间模式
+     * 0:无尽模式 1:击杀模式 2:距离模式 3:时间模式 4.防御(时间)模式 5.护送模式 6 钥匙模式  7:击杀+时间模式 8:距离+时间模式  9:护送+时间  10:钥匙+时间
      */
     showLevelTask() {
         let initArr = null;
@@ -564,23 +556,25 @@ export default class HomeMain extends cc.Component {
                 initArr = GameMag.Ins.taskTypeArr;
             }
         }
+        GameMag.Ins.updateTaskTypeArr(initArr);
         console.log("任务列表:", initArr);
         GameMag.Ins.taskTypeArr = initArr;
-        let arr = [0, 1, 2, 3];
+        let arr = [0, 1, 2, 3, 4, 5, 6];//主页地图坐标的下标
         if (lv == 1) {
             arr = [0]; //第一关固定放在第一个位置
         } else {
             arr.sort(() => Math.random() - 0.5);
         }
-        let psArr = arr.slice(0, initArr.length);//随机分配坐标位置
+        let psArr = arr.slice(0, initArr.length);//随机分配坐标位置   
+        console.log(psArr);
         for (let i = 0; i < initArr.length; i++) {
             let node = this.taskBox.children[initArr[i]];
             let ps = this.taskPos[psArr[i]];
-            if (!GameMag.Ins.guide[1]) {
-                this.scheduleOnce(() => {
-                    DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [1, 0, cc.v2(0, -230), cc.v2(ps.x, ps.y - 150)]);
-                }, 0.4);
-            }
+            // if (!GameMag.Ins.guide[1]) {
+            //     this.scheduleOnce(() => {
+            //         DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [1, 0, cc.v2(0, -230), cc.v2(ps.x, ps.y - 150)]);
+            //     }, 0.4);
+            // }
             node.active = true;
             node.setPosition(ps);
             node.getComponent("task").init(initArr[i], psArr[i]);//任务编号,地图编号(逆时针)

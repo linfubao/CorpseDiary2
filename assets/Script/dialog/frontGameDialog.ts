@@ -61,16 +61,16 @@ export default class FrontGameDialog extends cc.Component {
         this.enterBtn.on(cc.Node.EventType.TOUCH_END, this.onEnterGame, this);
         this.closeBtn.on(cc.Node.EventType.TOUCH_END, this.onCloseBtn, this);
         this.tryBtn.on(cc.Node.EventType.TOUCH_END, this.onTryBtn, this);
-        if (!GameMag.Ins.guide[3]) {
-            cc.director.on("showGuideStep3", function () {
-                this.scheduleOnce(() => {
-                    const pos = cc.v2(this.enterBtn.x + 330, this.enterBtn.y);
-                    DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [3, 90, cc.Vec2.ZERO, pos]);
-                }, 0.1);
-            }.bind(this), this);
-        }
+        // if (!GameMag.Ins.guide[3]) {
+        //     cc.director.on("showGuideStep3", function () {
+        //         this.scheduleOnce(() => {
+        //             const pos = cc.v2(this.enterBtn.x + 330, this.enterBtn.y);
+        //             DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [3, 90, cc.Vec2.ZERO, pos]);
+        //         }, 0.1);
+        //     }.bind(this), this);
+        // }
     }
-    // 0:无尽模式 1:击杀模式 2:距离模式 3:时间模式  4:击杀+时间模式 5:距离+时间模式
+    // 0:无尽模式 1:击杀模式 2:距离模式 3:时间模式 4.防御模式 5.护送模式 6 钥匙模式  7:击杀+时间模式 8:距离+时间模式  9:护送+时间  10:钥匙+时间
     initUI(taskIndex, mapIndex) {
         GameMag.Ins.gameKillNum = 0;
         let lv = GameMag.Ins.level;
@@ -79,12 +79,13 @@ export default class FrontGameDialog extends cc.Component {
         let secondNum = 20 + (lv - 1) * 5;
         let coinNum = taskIndex < 4 ? 800 + (lv - 1) * 50 : 1000 + (lv - 1) * 150;
         let diamondNum = 1 + Math.floor(lv / 10);
+        let keyNum = Math.floor(lv / 2);
 
         this.levelLab.string = String(`第${lv}天`);
         this.mapBg.spriteFrame = this.frontAtlas.getSpriteFrame("bg" + mapIndex);
         this.title.spriteFrame = this.frontAtlas.getSpriteFrame("title_" + mapIndex);
         this.desc.spriteFrame = this.frontAtlas.getSpriteFrame("desc_" + mapIndex);
-        GameMag.Ins.missionData = { killNum: null, moveNum: null, secondNum: null, coinNum: null, diamondNum: null };
+        GameMag.Ins.cleanMissionData();
         let str = "";
         switch (taskIndex) {
             case 0:
@@ -110,17 +111,45 @@ export default class FrontGameDialog extends cc.Component {
                 GameMag.Ins.missionData.secondNum = secondNum;
                 break;
             case 4:
+                console.log("防御模式");
+                str = `在${secondNum}秒内阻止${killNum}个僵尸进入旋涡`;
+                GameMag.Ins.missionData.defenseNum = killNum;
+                GameMag.Ins.missionData.secondNum = secondNum;
+                break;
+            case 5:
+                console.log("护送模式");
+                str = `任务:护送路人到达直接地点,僵尸不攻击角色，只攻击路人，路人死亡任务失败`;
+                GameMag.Ins.missionData.moveNum = moveNum;
+                break;
+            case 6:
+                console.log("钥匙模式");
+                str = `任务:收集${keyNum}个钥匙`;
+                GameMag.Ins.missionData.keyNum = keyNum;
+                break;
+            case 7:
                 console.log("击杀+时间模式");
                 const time = 20 + (lv - 1) * 8;
                 str = `任务:${time}秒内击杀${killNum}个僵尸`;
                 GameMag.Ins.missionData.killNum = killNum;
                 GameMag.Ins.missionData.secondNum = time;
                 break;
-            case 5:
+            case 8:
                 console.log("距离+时间模式");
                 str = `任务:${secondNum}秒内移动${moveNum}米`;
                 GameMag.Ins.missionData.moveNum = moveNum;
                 GameMag.Ins.missionData.secondNum = secondNum;
+                break;
+            case 9:
+                console.log("护送+时间模式");
+                str = `任务: ${secondNum}秒内护送路人到达直接地点`;
+                GameMag.Ins.missionData.secondNum = secondNum;
+                GameMag.Ins.missionData.moveNum = moveNum;
+                break;
+            case 10:
+                console.log("钥匙+时间模式");
+                str = `任务: ${secondNum}秒内收集${keyNum}个钥匙`;
+                GameMag.Ins.missionData.secondNum = secondNum;
+                GameMag.Ins.missionData.keyNum = keyNum;
                 break;
             default:
                 break;
@@ -165,10 +194,10 @@ export default class FrontGameDialog extends cc.Component {
                     .to(0.08, { position: cc.v3(250, 0, 0) })
                     .call(() => {
                         this.showActionEnd = true;
-                        if (!GameMag.Ins.guide[2]) {
-                            const ps = this.missionLab.node.position;
-                            DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [2, 90, cc.v2(0, -245), cc.v2(ps.x + 450, ps.y - 30)]);
-                        }
+                        // if (!GameMag.Ins.guide[2]) {
+                        //     const ps = this.missionLab.node.position;
+                        //     DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [2, 90, cc.v2(0, -245), cc.v2(ps.x + 450, ps.y - 30)]);
+                        // }
                     })
                     .start();
             })

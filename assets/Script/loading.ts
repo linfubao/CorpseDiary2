@@ -16,32 +16,8 @@ export default class Loading extends cc.Component {
 
     loadOver: boolean = false;
     onLoad() {
-        const startTime = new Date().getTime();
         SdkManager.instance.InitSDK();
         GameMag.Ins.initLocalStorageData();
-        if (!cc.sys.isBrowser) {
-            this.uploadData();
-            //@ts-ignore
-            GameMag.Ins.launchData = wx.getLaunchOptionsSync();//获取小游戏启动时的参数
-            cc.game.off(cc.game.EVENT_SHOW);
-            cc.game.on(cc.game.EVENT_SHOW, function () {
-                console.log("进入游戏");
-
-            }.bind(this), this);
-            cc.game.off(cc.game.EVENT_HIDE);
-            cc.game.on(cc.game.EVENT_HIDE, function () {
-                console.log("退出游戏");
-                if (!this.loadOver) {
-                    //还没有加载完就退出游戏,上传数据
-                    // @ts-ignore
-                    wx.reportUserBehaviorBranchAnalytics({
-                        branchId: 'BCBgAAoXHx5d138Ug9YRx4',
-                        branchDim: `1`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
-                        eventType: 1 // 1：曝光； 2：点击
-                    });
-                }
-            }.bind(this), this);
-        }
         this.scheduleOnce(() => {
             this.load();
         }, 0);
@@ -82,19 +58,19 @@ export default class Loading extends cc.Component {
                     self.progress.progress = percent;
                     // self.str.string = `${Math.ceil(percent * 100)}%`;
                 }, (err) => {
-                    self.loadOver = true;
                     console.log("主场景预加载完成");
-                    if (!cc.sys.isBrowser) {
-                        const _t = new Date().getTime();
-                        const diff = Math.floor((_t - time) / 1000);
-                        //加载页的游戏加载耗时时间(秒数)
-                        // @ts-ignore
-                        wx.reportUserBehaviorBranchAnalytics({
-                            branchId: 'BCBgAAoXHx5d138Ug9YRx5',
-                            branchDim: `${diff}`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
-                            eventType: 1 // 1：曝光； 2：点击
-                        });
-                    }
+                    // self.loadOver = true;
+                    // if (!cc.sys.isBrowser) {
+                    //     const _t = new Date().getTime();
+                    //     const diff = Math.floor((_t - time) / 1000);
+                    //     //加载页的游戏加载耗时时间(秒数)
+                    //     // @ts-ignore
+                    //     wx.reportUserBehaviorBranchAnalytics({
+                    //         branchId: 'BCBgAAoXHx5d138Ug9YRx5',
+                    //         branchDim: `${diff}`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
+                    //         eventType: 1 // 1：曝光； 2：点击
+                    //     });
+                    // }
                     if (err) throw new Error(`${err}`);
                     cc.director.loadScene(homeScene);
                 });

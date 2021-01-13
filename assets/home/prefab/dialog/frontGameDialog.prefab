@@ -1175,7 +1175,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 0,
-      "height": 8
+      "height": 10.08
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1229,13 +1229,11 @@
     "_useOriginalSize": false,
     "_string": "",
     "_N$string": "",
-    "_fontSize": 8,
-    "_lineHeight": 8,
+    "_fontSize": 30,
+    "_lineHeight": 30,
     "_enableWrapText": true,
-    "_N$file": {
-      "__uuid__": "61ab3af5-e784-42db-a6e6-4b3af59490c6"
-    },
-    "_isSystemFontUsed": false,
+    "_N$file": null,
+    "_isSystemFontUsed": true,
     "_spacingX": 1,
     "_batchAsBitmap": false,
     "_styleFlags": 0,

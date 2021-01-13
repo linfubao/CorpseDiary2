@@ -47,10 +47,10 @@ export default class GuideDialog extends cc.Component {
                 cc.director.emit("initBackground");
                 break;
             case 1:
-                let todaySign = GameMag.Ins.signInData.todaySign;
-                if (!todaySign) {
-                    DialogMag.Ins.show(DialogPath.SignInDialog, DialogScript.SignInDialog, []);
-                }
+                // let todaySign = GameMag.Ins.signInData.todaySign;
+                // if (!todaySign) {
+                //     DialogMag.Ins.show(DialogPath.SignInDialog, DialogScript.SignInDialog, []);
+                // }
                 break;
             case 2:
                 cc.director.emit("showGuideStep3");

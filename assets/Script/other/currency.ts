@@ -23,14 +23,14 @@ export default class Currency extends cc.Component {
         if (this.buyBtn) {
             this.buyBtn.on(cc.Node.EventType.TOUCH_END, this.onBuyBtn, this);
         };
-        // this.coinNode.on(cc.Node.EventType.TOUCH_END, function () {
-        //     GameMag.Ins.updateCurrency(0, 100000);
-        //     this.updateCurrency();
-        // }, this);
-        // this.diamondNode.on(cc.Node.EventType.TOUCH_END, function () {
-        //     GameMag.Ins.updateCurrency(1, 500);
-        //     this.updateCurrency();
-        // }, this);
+        this.coinNode.on(cc.Node.EventType.TOUCH_END, function () {
+            GameMag.Ins.updateCurrency(0, 100000);
+            this.updateCurrency();
+        }, this);
+        this.diamondNode.on(cc.Node.EventType.TOUCH_END, function () {
+            GameMag.Ins.updateCurrency(1, 500);
+            this.updateCurrency();
+        }, this);
     }
     onBuyBtn() {
         AudioMag.getInstance().playSound("按钮音");

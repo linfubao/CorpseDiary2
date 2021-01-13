@@ -69,18 +69,22 @@ export default class GameMain extends cc.Component {
     footDragon: dragonBones.ArmatureDisplay = null;
     @property(dragonBones.ArmatureDisplay)
     bodyDragon: dragonBones.ArmatureDisplay = null;
-    @property({ type: cc.Node, tooltip: "击杀模式数值" })
+    @property({ type: cc.Node, tooltip: "击杀模式" })
     killTextNode: cc.Node = null;
-    @property({ type: cc.Label, tooltip: "击杀模式数值" })
-    killText: cc.Label = null;
-    @property({ type: cc.Node, tooltip: "距离模式数值" })
+    @property({ type: cc.Label, tooltip: "小怪的计数数值,击杀模式/防御模式都会用" })
+    countText: cc.Label = null;
+    @property({ type: cc.Node, tooltip: "距离模式" })
     runTextNode: cc.Node = null;
     @property({ type: cc.Label, tooltip: "距离模式数值" })
     runText: cc.Label = null;
-    @property({ type: cc.Node, tooltip: "时间模式数值" })
+    @property({ type: cc.Node, tooltip: "时间模式" })
     timerTextNode: cc.Node = null;
     @property({ type: cc.Label, tooltip: "时间模式数值" })
     timerText: cc.Label = null;
+    @property({ type: cc.Node, tooltip: "钥匙模式" })
+    keyTextNode: cc.Node = null;
+    @property({ type: cc.Label, tooltip: "钥匙模式数值" })
+    keyText: cc.Label = null;
     @property({ type: cc.Sprite, tooltip: "杀戮提示" })
     killingTip: cc.Sprite = null;
     @property(cc.Node)
@@ -91,8 +95,17 @@ export default class GameMain extends cc.Component {
     assistStatus: cc.Sprite = null;
     @property({ type: cc.Prefab, tooltip: "导弹(复活/道具)" })
     missilePre: cc.Prefab = null;
+    @property({ type: cc.Node, tooltip: "防御区域" })
+    defenseBox: cc.Node = null;
+    @property(cc.Node)
+    babyNode: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "主角被攻击时屏幕左右两边的血" })
+    gameRoleBlood: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "钥匙模式随机出现的钥匙" })
+    gameKey: cc.Node = null;
 
     moveSpeed: number = 0;
+    babyMoveSpeed: number = 0; //那小子的移动速度
     moveLeft: boolean = false;
     moveRight: boolean = false;
     bulletShellsPool: cc.NodePool = null;
@@ -100,9 +113,14 @@ export default class GameMain extends cc.Component {
     roleSkin: cc.Node = null;
     roleFoot: cc.Node = null;
     attackTime: number = 0;
+    /**
+     * 0:无尽模式 1:击杀模式 2:距离模式 3:时间模式 4.防御模式 5.护送模式 6 钥匙模式  7:击杀+时间模式 8:距离+时间模式  9:护送+时间  10:钥匙+时间
+     */
     taskIndex: number = 0;
     runDis: number = 200;//计算移动距离的基本单位
     secondNum: number = 0;
+    keyNum: number = 0;
+    defenseNum: number = null;
     mecha: cc.Node = null;
     mecheTime: number = 0;//显示机甲的倒计时初始时间
     mecheCountTime: number = 0;//显示机甲的倒计时时间
@@ -110,6 +128,8 @@ export default class GameMain extends cc.Component {
     mecheShowTime: boolean = false;//是否正在显示机甲,就是从天上掉下来到地面的这段时间,主要是为了不让玩家进行别的移动等操作
     assistSpeed: number = null;//使用了加速道具后的速度
     recordTryGun: number = null;//因为GameMag.Ins.tryGun会一直变,所以用这个变量记录最初的试用武器
+    initBabyPs: number = -160; //要护卫的那小子的初始位置
+    initBabyDiff: number = 350; //要护卫的那小子和主角之间的固定距离
 
     gunList: number[] = [];
     gunItemIndex: number = 0;
@@ -137,28 +157,31 @@ export default class GameMain extends cc.Component {
         this.initData();
         this.initUI();
         this.gameEvents();
-        const lv = GameMag.Ins.level;
-        if (lv <= 10) {
-            //开始游戏用户数量
-            //@ts-ignore
-            wx.reportUserBehaviorBranchAnalytics({
-                branchId: 'BCBgAAoXHx5d138Ug9YRxh',
-                branchDim: `${lv}`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
-                eventType: 1 // 1：曝光； 2：点击
-            });
-        }
+        // const lv = GameMag.Ins.level;
+        // if (lv <= 10) {
+        //     //开始游戏用户数量
+        //     //@ts-ignore
+        //     wx.reportUserBehaviorBranchAnalytics({
+        //         branchId: 'BCBgAAoXHx5d138Ug9YRxh',
+        //         branchDim: `${lv}`, // 自定义维度(可选)：类型String，取值[1,100]，必须为整数，当上传类型不符时不统计
+        //         eventType: 1 // 1：曝光； 2：点击
+        //     });
+        // }
     }
     initData() {
         GameMag.Ins.initGamePools();
         this.recordTryGun = GameMag.Ins.tryGun;
+        this.defenseNum = GameMag.Ins.missionData.defenseNum;
         GameMag.Ins.isUseingMecha = false;
         GameMag.Ins.gameOver = false;
         GameMag.Ins.timeOver = false;
         GameMag.Ins.runOver = false;
         GameMag.Ins.killOver = false;
+        GameMag.Ins.defenseOver = false;
         GameMag.Ins.gameKillNum = 0;
         GameMag.Ins.roleBlood = 1;
         GameMag.Ins.timeStart = new Date().getTime();
+        this.babyMoveSpeed = 5 * 40;
         let useSkin = GameMag.Ins.trySkin || GameMag.Ins.useingData.skin;
         let info = ConfigMag.Ins.getSkinData()[useSkin];
         if (info) {
@@ -176,36 +199,39 @@ export default class GameMain extends cc.Component {
         this.loadGunList();
         this.loadAssistList(useingData);
         this.loadMechaList(useingData);
-        const lv = GameMag.Ins.level;
-        if (lv == 1) {
-            const ps = cc.v2(this.leftBox.x + 200, this.leftBox.y);
-            DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [4, 90, cc.v2(0, 0), ps]);
-            cc.director.on("showGuideStep5", function () {
-                this.scheduleOnce(() => {
-                    const pos = cc.v2(this.rightBox.x - 200, this.rightBox.y);
-                    DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [5, -90, cc.Vec2.ZERO, pos]);
-                }, 0.1);
-            }.bind(this), this);
-            cc.director.on("showGuideStep6", function () {
-                this.scheduleOnce(() => {
-                    const pos = cc.v2(this.taskBox.x + 300, this.taskBox.y - 45);
-                    DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [6, 90, cc.v2(50, -70), pos]);
-                }, 0.1);
-            }.bind(this), this);
-            cc.director.on("showEnemy", this.showEnemy, this); //道具箱子随机出怪
-        } else {
-            this.showEnemy();
-        }
+        // const lv = GameMag.Ins.level;
+        // if (lv == 1) {
+        //     const ps = cc.v2(this.leftBox.x + 200, this.leftBox.y);
+        //     DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [4, 90, cc.v2(0, 0), ps]);
+        //     cc.director.on("showGuideStep5", function () {
+        //         this.scheduleOnce(() => {
+        //             const pos = cc.v2(this.rightBox.x - 200, this.rightBox.y);
+        //             DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [5, -90, cc.Vec2.ZERO, pos]);
+        //         }, 0.1);
+        //     }.bind(this), this);
+        //     cc.director.on("showGuideStep6", function () {
+        //         this.scheduleOnce(() => {
+        //             const pos = cc.v2(this.taskBox.x + 300, this.taskBox.y - 45);
+        //             DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [6, 90, cc.v2(50, -70), pos]);
+        //         }, 0.1);
+        //     }.bind(this), this);
+        //     cc.director.on("showEnemy", this.showEnemy, this); //道具箱子随机出怪
+        // } else {
+        this.showEnemy();
+        // }
     }
     gameEvents() {
         cc.director.on("freshRoleGun", this.freshRoleGun, this);//动态加载武器
         cc.director.on("updateGameKillNum", this.updateGameKillNum, this);//更新杀敌数UI(任务显示用)
+        cc.director.on("updateGameDefenseNum", this.updateGameDefenseNum, this);//更新进入旋涡的敌人数(任务显示用)
         cc.director.on("revive", this.revive, this);//复活
         cc.director.on("gameOver", this.gameOver, this);//游戏结算
         cc.director.on("resumeGame", this.resumeGame, this);//游戏暂停后的恢复
         cc.director.on("useAssist", this.useAssist, this); //使用辅助道具
         cc.director.on("useAssistMissile", this.useAssistMissile, this); //使用辅助道具的天降导弹
         cc.director.on("loadEnemy", this.loadEnemy, this); //道具箱子随机出怪
+        cc.director.on("showRoleBlood", this.showRoleBlood, this); //显示主角(或baby)被攻击时屏幕左右两边的血
+        cc.director.on("showGameKey", this.showGameKey, this); //钥匙模式随机出现的钥匙
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
         this.leftBtn.on(cc.Node.EventType.TOUCH_START, this.onMoveLeftStart, this);
@@ -221,6 +247,18 @@ export default class GameMain extends cc.Component {
         this.attackBtn.on(cc.Node.EventType.TOUCH_CANCEL, this.onAttackEnd, this);
         this.pauseBtn.on(cc.Node.EventType.TOUCH_START, this.onPauseBtn, this);
     }
+    /**
+     * 显示主角(或baby)被攻击时屏幕左右两边的血
+     */
+    showRoleBlood() {
+        this.gameRoleBlood.children.forEach(item => {
+            item.stopAllActions();
+            cc.tween(item)
+                .to(0.3, { opacity: 255 })
+                .to(0.3, { opacity: 0 })
+                .start();
+        })
+    }
     initPoos() {
         this.missilePool = new cc.NodePool();
         this.bulletShellsPool = new cc.NodePool();
@@ -235,7 +273,7 @@ export default class GameMain extends cc.Component {
     }
     enemyData: any[] = null;
     showEnemy() {
-        // return     
+        // return
         const level = GameMag.Ins.level;
         this.enemyData = ConfigMag.Ins.getEnemyData();
         // console.log(this.enemyData);
@@ -272,7 +310,8 @@ export default class GameMain extends cc.Component {
         GameMag.Ins.getEnemy(tag, function (node) {
             node.getComponent("enemy").init(tag, self.role);
             let camera = self.roleCamera;
-            let flag = Math.random() < 0.35 ? -1 : 1;
+            const bool = self.taskIndex === 4 || self.taskIndex === 5 || self.taskIndex === 9;
+            let flag = bool ? 1 : Math.random() < 0.35 ? -1 : 1;//防御和护送模式只从右边出怪
             let x = camera.x + (flag * (camera.width / 2 + 200));
             node.setPosition(x, self.role.y);
             node.parent = self.enemyBox.children[tag]; //每个怪都有对应的节点存放
@@ -574,21 +613,26 @@ export default class GameMain extends cc.Component {
             }
         }
     }
-    //初始化关卡任务的数据
+    //初始化关卡任务的数据,0:无尽模式 1:击杀模式 2:距离模式 3:时间模式 4.防御(有计时)模式 5.护送模式 6 钥匙模式  7:击杀+时间模式 8:距离+时间模式  9:护送+时间  10:钥匙+时间
     initTask() {
         let taskIndex = GameMag.Ins.taskType;
         this.taskIndex = taskIndex;
         if (taskIndex == 0) { //无限模式
             this.killTextNode.active = true;
-            this.killText.string = "0";
+            this.countText.string = "0";
             return;
         };
         let missionData = GameMag.Ins.missionData;
         this.secondNum = missionData.secondNum;
-        this.killText.string = String(`${0}/${missionData.killNum}`);
+        if (taskIndex == 4) {
+            this.countText.string = String(`${missionData.defenseNum}`);
+        } else {
+            this.countText.string = String(`${0}/${missionData.killNum}`);
+        }
         this.runText.string = String(`${missionData.moveNum}m`);
         let timeStr = ToolsMag.Ins.formateSeconds(this.secondNum);
         this.timerText.string = String(timeStr);
+        this.keyText.string = String(`0/${missionData.keyNum}`);
         switch (taskIndex) {
             case 0:
                 this.killTextNode.active = true;
@@ -605,22 +649,77 @@ export default class GameMain extends cc.Component {
                 this.schedule(this.taskCountDown, 1);
                 break;
             case 4:
+                this.defenseBox.active = true;
                 this.killTextNode.active = true;
                 this.timerTextNode.active = true;
                 this.schedule(this.taskCountDown, 1);
                 break;
             case 5:
+                this.babyNode.x = this.initBabyPs;
+                this.babyNode.active = true;
+                this.runTextNode.active = true;
+                // let x = this.runDis * 5; //5m
+                // console.log(x);
+                break;
+            case 6:
+                this.keyTextNode.active = true;
+                this.loadGameKey();
+                break;
+            case 7:
+                this.killTextNode.active = true;
+                this.timerTextNode.active = true;
+                this.schedule(this.taskCountDown, 1);
+                break;
+            case 8:
                 this.runTextNode.active = true;
                 this.timerTextNode.active = true;
                 this.schedule(this.taskCountDown, 1);
                 this.showRunLogo();
                 break;
+            case 9:
+                this.babyNode.x = this.initBabyPs;
+                this.babyNode.active = true;
+                this.timerTextNode.active = true;
+                this.runTextNode.active = true;
+                this.schedule(this.taskCountDown, 1);
+                break;
+            case 10:
+                this.keyTextNode.active = true;
+                this.timerTextNode.active = true;
+                this.loadGameKey();
+                this.schedule(this.taskCountDown, 1);
+                break;
             default:
                 break;
         }
-
     }
-    //关卡任务的计时任务
+    /**
+     * 钥匙任务的定时刷新
+     */
+    showGameKey() {
+        this.keyNum++;
+        this.keyText.string = String(`${this.keyNum}/${GameMag.Ins.missionData.keyNum}`);
+        if (this.keyNum == GameMag.Ins.missionData.keyNum) {
+            GameMag.Ins.getKeyOver = true;
+            this.gameOver(true);
+            return;
+        }
+        this.loadGameKey();
+    }
+    loadGameKey() {
+        let _t = Math.floor(Math.random() * (6 - 3) + 3);
+        console.log(_t);
+        this.scheduleOnce(function () {
+            console.log("出钥匙");
+            let camera = this.roleCamera;
+            let x = camera.x + (camera.width / 2 + 200);
+            this.gameKey.x = x;
+            this.gameKey.active = true;
+        }.bind(this), _t);
+    }
+    /**
+     * 关卡任务的计时任务
+     */
     taskCountDown() {
         if (GameMag.Ins.gameOver || GameMag.Ins.gamePause) return;
         this.secondNum--;
@@ -629,6 +728,12 @@ export default class GameMain extends cc.Component {
             GameMag.Ins.timeOver = true;
             if (this.taskIndex == 3) {
                 this.gameOver(true);
+            } else if (this.taskIndex == 4) { //防御模式
+                if (!GameMag.Ins.defenseOver) {
+                    this.gameOver(true);
+                } else {
+                    this.gameOver(false);
+                }
             } else {
                 // console.log(GameMag.Ins.killOver, GameMag.Ins.runOver);
                 if (GameMag.Ins.killOver || GameMag.Ins.runOver) {
@@ -646,16 +751,17 @@ export default class GameMain extends cc.Component {
     initBackground() {
         //有距离模式时,提前计算应该放几块背景图,其他的统一默认3块背景图,包括无限模式
         let diff: number = null;
-        let missionData = GameMag.Ins.missionData;
-        if (missionData && (this.taskIndex == 2 || this.taskIndex == 5)) {
+        let missionData = GameMag.Ins.missionData; //2 5 6 8 9 10 
+        if (this.taskIndex == 0 || this.taskIndex == 1 || this.taskIndex == 3 || this.taskIndex == 4 || this.taskIndex == 7) { //距离不相关的模式
+            diff = 0;
+        } else {
             let moveNum = missionData.moveNum;
             diff = Math.ceil(moveNum / 15) + 2;
             console.log("增加几屏", diff);
-        } else {
-            diff = 1;
         }
         for (let i = 0; i <= diff; i++) {
-            let node = cc.instantiate(this.bgs[GameMag.Ins.mapIndex]);
+            // let node = cc.instantiate(this.bgs[GameMag.Ins.mapIndex]);
+            let node = cc.instantiate(this.bgs[0]);
             node.parent = this.bgBox;
         }
         //然后更新地板长度
@@ -746,10 +852,13 @@ export default class GameMain extends cc.Component {
         this.showEnemy();
         this.roleStay();
         this.useAssistMissile(1);
-        if (this.taskIndex == 3 || this.taskIndex == 4 || this.taskIndex == 5) {
+        const missionData = GameMag.Ins.missionData;
+        this.defenseNum = missionData.defenseNum;
+        GameMag.Ins.defenseOver = false;
+        if (this.taskIndex == 3 || this.taskIndex == 4 || this.taskIndex >= 7) {//和时间相关的模式
             GameMag.Ins.timeOver = false;
             this.unschedule(this.taskCountDown);
-            this.secondNum = GameMag.Ins.missionData.secondNum;
+            this.secondNum = missionData.secondNum;
             this.timerText.string = String(ToolsMag.Ins.formateSeconds(this.secondNum));
             this.schedule(this.taskCountDown, 1);
         }
@@ -1074,31 +1183,48 @@ export default class GameMain extends cc.Component {
             .start();
     }
     //实时更新移动距离
-    updateDistance(x) {
+    updateDistance() {
+        let x = null;
+        if (this.taskIndex == 2 || this.taskIndex == 8) { //距离相关的模式
+            x = this.role.x;
+        } else if (this.taskIndex == 5 || this.taskIndex == 9) {
+            x = this.babyNode.x;
+        }
         if (x < 0) return;
         x = Math.floor(x / this.runDis);
         // console.log(x);
-        let m = GameMag.Ins.missionData.moveNum - x;
-        this.runText.string = String(`${m}m`);
-        if (GameMag.Ins.missionData.moveNum - x == 0) {//到达终点
+        let meter = GameMag.Ins.missionData.moveNum - x;
+        this.runText.string = String(`${meter}m`);
+        if (meter === 0) {//到达终点
             console.log("到达终点了,时间:", GameMag.Ins.timeOver);
             GameMag.Ins.runOver = true;
-            if (this.taskIndex == 2) {
+            if (this.taskIndex == 2 || this.taskIndex == 5) {
                 this.gameOver(true);
-            } else if (this.taskIndex == 5) {
+            } else if (this.taskIndex == 8 || this.taskIndex == 9) {
                 if (!GameMag.Ins.timeOver) {
                     this.gameOver(true);
                 }
             }
         }
     }
+    //更新进入旋涡的敌人数
+    updateGameDefenseNum() {
+        this.defenseNum--;
+        let num = this.defenseNum;
+        this.countText.string = String(num);
+        if (num <= 0 && !GameMag.Ins.timeOver) {
+            this.countText.string = "0";
+            GameMag.Ins.defenseOver = true;
+            this.gameOver(false);
+        }
+    }
     // 更新杀敌数UI,及杀戮提示
     updateGameKillNum() {
         let gameKillNum = GameMag.Ins.gameKillNum;
         if (this.taskIndex == 0) {
-            this.killText.string = String(gameKillNum);
-        } else {
-            this.killText.string = String(`${gameKillNum}/${GameMag.Ins.missionData.killNum}`);
+            this.countText.string = String(gameKillNum);
+        } else if (this.taskIndex == 1 || this.taskIndex == 7) {
+            this.countText.string = String(`${gameKillNum}/${GameMag.Ins.missionData.killNum}`);
         }
         // console.log("杀敌数",GameMag.Ins.gameKillNum);
         let arr = ConfigMag.Ins.getKillReward();
@@ -1159,7 +1285,6 @@ export default class GameMain extends cc.Component {
             target.active = false;
         }, assistTime);
     }
-
     //闪耀
     showShine() {
         let self = this;
@@ -1172,7 +1297,6 @@ export default class GameMain extends cc.Component {
     moveDir(dir: number) {
         if (this.mecha) {
             this.mecha.scaleX = dir;
-            return;
         }
         this.roleSkin.scaleX = dir;
         this.roleFoot.scaleX = dir;
@@ -1191,8 +1315,15 @@ export default class GameMain extends cc.Component {
             this.role.x += dt * speed;
             this.moveDir(1);
         }
-        if (this.taskIndex == 2 || this.taskIndex == 5) {
-            this.updateDistance(this.role.x);
+        let babyX = this.babyNode.x;
+        const diff = this.role.x - babyX; //主角和baby之间的距离
+        if (diff > this.initBabyDiff) {
+            this.babyNode.x += dt * this.babyMoveSpeed;
+        } else if (diff < -this.initBabyDiff) {
+            this.babyNode.x -= dt * this.babyMoveSpeed;
+        }
+        if (this.taskIndex == 2 || this.taskIndex == 5 || this.taskIndex == 8 || this.taskIndex == 9) {
+            this.updateDistance();
         }
         this.roleCamera.x = cc.misc.clampf(this.role.x, 0, this.bgBox.width - 1300 - 500);
     }

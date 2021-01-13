@@ -35,16 +35,6 @@ export default class Role extends cc.Component {
         cc.director.on("useAssistBlood", this.useAssistBlood, this);
         cc.director.on("useAssistHurt", this.useAssistHurt, this);
     }
-    //显示屏幕两边的血图
-    showRoleBlood() {
-        this.gameRoleBlood.children.forEach(item => {
-            item.stopAllActions();
-            cc.tween(item)
-                .to(0.3, { opacity: 255 })
-                .to(0.3, { opacity: 0 })
-                .start();
-        })
-    }
     //复活之后的血量重置
     reviveInitRoleBlood() {
         GameMag.Ins.roleBlood = 1;
@@ -84,7 +74,7 @@ export default class Role extends cc.Component {
     //扣血
     hurtRole(num) {
         if (GameMag.Ins.gamePause || GameMag.Ins.gameOver || this.bloodBar.progress <= 0 || GameMag.Ins.isUseingMecha) return;
-        this.showRoleBlood();
+        cc.director.emit("showRoleBlood");
         AudioMag.getInstance().playSound("被攻击受伤");
         let hurt = this.assistHurtNum ? num - (num * (this.assistHurtNum / 100)) : num;//暂时减少x%伤害，持续10秒 : 实际伤害
         let hurtNum = hurt - hurt * (this.info.armor / 10); //实际伤害 - 扣除护甲后的实际伤害 = 最后的真正伤害值, 除以10的意思是:护甲2说明伤害减伤20%        
@@ -105,7 +95,11 @@ export default class Role extends cc.Component {
             node.parent = self.node;
         })
     }
-    // onCollisionEnter(other, self) {
-    // console.log('on collision enter', "other", other, self);
-    // }
+    onCollisionEnter(other, self) {
+        // console.log('on collision enter', "other", other, self);
+        if (other.tag === 21) { //钥匙
+            other.node.active = false;
+            cc.director.emit("showGameKey");
+        }
+    }
 }
