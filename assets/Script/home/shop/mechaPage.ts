@@ -28,11 +28,14 @@ export default class MechaPage extends cc.Component {
     @property({ type: cc.Node, tooltip: "解除装备" })
     unequipBtn: cc.Node = null;
     @property(cc.Node)
+    bloodNode: cc.Node = null;
+    @property(cc.Node)
     powerNode: cc.Node = null;
     @property(cc.Node)
     speedNode: cc.Node = null;
-    @property(cc.Prefab)
-    singlePre: cc.Prefab = null;
+    @property(cc.Node)
+    mechaContent: cc.Node = null;
+
     @property(cc.Label)
     coinLab: cc.Label = null;
     @property(cc.Label)
@@ -45,20 +48,26 @@ export default class MechaPage extends cc.Component {
     len: number = 0;
     index: number = 0;
     clickFlag: number = null;//当前点击的是哪个武器,代表gunID
-    pool: cc.NodePool = null;
-    skillConfig: number[] = [];
-    speedCount: number = 0;
-    powerCount: number = 0;
 
-    onLoad() {
+    skillConfig: number[] = [];
+    bloodCount: number = 0;
+    powerCount: number = 0;
+    speedCount: number = 0;
+    bloodMaxCount: number = 0;
+    powerMaxCount: number = 0;
+    speedMaxCount: number = 0;
+
+    onEnable() {
+        this.mechaContent.getComponent("UIScrollSelect").init();
         this.skillConfig = GameMag.Ins.skillConfig;
         this.mechaData = ConfigMag.Ins.getMechaData();
         this.len = this.mechaData.length;
-        this.loadItem();
-        this.pool = new cc.NodePool();
-        for (let i = 0; i < 35; i++) {
-            let node = cc.instantiate(this.singlePre);
-            this.pool.put(node);
+        if (this.index < this.len) {
+            this.loadItem();
+        } else {
+            const useMecha = GameMag.Ins.useingData.mecha;
+            const data = ConfigMag.Ins.getMechaData()[useMecha];
+            this.freshMechaPageUI(data);
         }
         cc.director.on("freshMechaPageUI", this.freshMechaPageUI, this);
         this.buyGunBtn.on(cc.Node.EventType.TOUCH_END, this.onBuyGunBtn, this);
@@ -78,6 +87,10 @@ export default class MechaPage extends cc.Component {
                 self.loadItem();
             }
         })
+    }
+    scrollMecha(data) {
+        // console.log(data);
+        cc.director.emit("freshMechaItemActive", data.index);
     }
     //购买机甲
     onBuyGunBtn() {
@@ -101,7 +114,7 @@ export default class MechaPage extends cc.Component {
         GameMag.Ins.updateMechaData(this.clickFlag, 1);
         cc.director.emit("updateCurrency");
         cc.director.emit("freshMechaItemUI", this.clickFlag);
-        this.freshEquip(data);
+        this.freshBtns();
     }
     //装备
     onEquipBtn() {
@@ -121,14 +134,14 @@ export default class MechaPage extends cc.Component {
      * @param data 配置信息
      */
     freshMechaPageUI(data) {
-        if (this.clickFlag == data.mechaID) return;
+        // if (this.clickFlag == data.mechaID) return;
         this.clickFlag = data.mechaID;
         this.mechaName.spriteFrame = this.homeAtlas.getSpriteFrame("mname_" + data.mechaID);
         this.mechaDesc.spriteFrame = this.homeAtlas.getSpriteFrame("mechaDesc_" + data.mechaID);
-        this.freshMechaBone(data);
-        this.freshEquip(data);
+        // this.freshMechaBone(data);
+        this.freshBtns();
         this.freshCostBox(data);
-        this.loadSkillBlock(data);
+        this.loadSkillBlock();
     }
     /**
      * 显示机甲龙骨
@@ -210,8 +223,9 @@ export default class MechaPage extends cc.Component {
         ToolsMag.Ins.playDragonBone(inNode, action, times, null);
         ToolsMag.Ins.playDragonBone(upNode, action, times, null);
     }
-    freshEquip(data) {
-        let localData = GameMag.Ins.mechaData[data.mechaID];
+    //实时更新按钮:购买/装备/解除
+    freshBtns() {
+        let localData = GameMag.Ins.mechaData[this.clickFlag];
         let useringMecha = GameMag.Ins.useingData.mecha;
         // console.log(data, localData);
         if (useringMecha == localData.mechaID) {
@@ -224,6 +238,8 @@ export default class MechaPage extends cc.Component {
         if (localData.getNum == 0) {
             this.equipBtn.active = false;
             this.unequipBtn.active = false;
+        } else {
+            this.buyGunBtn.active = true;
         }
     }
     freshCostBox(data) {
@@ -243,65 +259,96 @@ export default class MechaPage extends cc.Component {
         }
     }
     //加载技能显示块
-    loadSkillBlock(data) {
+    loadSkillBlock() {
+        const info = ConfigMag.Ins.getMechaData()[this.clickFlag];
+        // console.log(info);
+        this.bloodCount = 0;
         this.powerCount = 0;
         this.speedCount = 0;
-        this.powerNode.destroyAllChildren();
-        this.speedNode.destroyAllChildren();
-        this.scheduleOnce(() => {
-            this.loadPower(data);
-            this.loadSpeed(data);
-        }, 0);
+        this.bloodMaxCount = info.blood * 2;
+        this.powerMaxCount = info.power * 2;
+        this.speedMaxCount = info.speed * 2;
+        this.putBlock(this.bloodNode);
+        this.putBlock(this.powerNode);
+        this.putBlock(this.speedNode);
+        this.unschedule(this.showSkillBlock);
+        this.scheduleOnce(this.showSkillBlock, 0.3);
     }
-    getSkillNode() {
-        let node = null;
-        if (this.pool.size() > 0) {
-            node = this.pool.get();
-        } else {
-            node = cc.instantiate(this.singlePre);
-        }
-        return node;
+    showSkillBlock() {
+        this.loadBlood();
+        this.loadPower();
+        this.loadSpeed();
     }
-    loadSpeed(data) {
-        let speedNum = data.speed;
-        let node = this.getSkillNode();
-        node.getChildByName("bg").color = cc.color(50, 223, 17);
-        node.parent = this.speedNode;
-        node.scale = 0;
-        cc.tween(node)
-            .to(this.skillConfig[0], { scale: this.skillConfig[1] })
-            .call(() => {
-                this.speedCount++;
-                if (this.speedCount < speedNum) {
-                    this.loadSpeed(data);
-                }
-            })
-            .to(this.skillConfig[2], { scale: 1 })
-            .start();
+    loadBlood() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.stopAllActions();
+            node.parent = self.bloodNode;
+            node.getChildByName("blue").active = false;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.bloodCount++;
+                    if (self.bloodCount < self.bloodMaxCount) {
+                        self.loadBlood();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        });
     }
-    loadPower(data) {
-        let powerNum = data.power;
-        let node = this.getSkillNode();
-        node.getChildByName("bg").color = cc.color(255, 179, 0);
-        node.parent = this.powerNode;
-        node.scale = 0;
-        cc.tween(node)
-            .to(this.skillConfig[0], { scale: this.skillConfig[1] })
-            .call(() => {
-                this.powerCount++;
-                if (this.powerCount < powerNum) {
-                    this.loadPower(data);
-                }
-            })
-            .to(this.skillConfig[2], { scale: 1 })
-            .start();
+    loadPower() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.stopAllActions();
+            node.parent = self.powerNode;
+            node.getChildByName("blue").active = false;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.powerCount++;
+                    if (self.powerCount < self.powerMaxCount) {
+                        self.loadPower();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        })
+    }
+    loadSpeed() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.stopAllActions();
+            node.parent = self.speedNode;
+            node.getChildByName("blue").active = false;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.speedCount++;
+                    if (self.speedCount < self.speedMaxCount) {
+                        self.loadSpeed();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        })
     }
     onDisable() {
-        this.speedNode.destroyAllChildren();
-        this.powerNode.destroyAllChildren();
-        this.powerCount = 0;
-        this.speedCount = 0;
-        this.loadPower(this.mechaData[this.clickFlag]);
-        this.loadSpeed(this.mechaData[this.clickFlag]);
+        this.putBlock(this.bloodNode);
+        this.putBlock(this.powerNode);
+        this.putBlock(this.speedNode);
+    }
+    //回收
+    putBlock(parentNode: cc.Node) {
+        parentNode.children.forEach(item => {
+            item.getChildByName("blue").active = false;
+            item.stopAllActions();
+            this.scheduleOnce(() => {
+                GameMag.Ins.putSkillBlock(item);
+            }, 0)
+        });
     }
 }

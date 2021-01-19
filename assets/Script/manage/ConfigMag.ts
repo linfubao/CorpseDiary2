@@ -581,56 +581,130 @@ const gunData = [
     }
 ]
 /**
- * armor    护甲
- * speed    速度
- * blood    血量*10
- * buyType     购买方式0:金币  1:砖石
- * costNum     购买花费的金额
+ * blood        血量
+ * speed        速度
+ * armor        护甲
+ * bloodUp      单次的血量升级成长值
+ * speedUp      单次的速度升级成长值
+ * armorUp      单次的护甲升级成长值
+ * bloodUpCost  单次的血量升级成长需要花费的钱
+ * speedUpCost  单次的血量升级速度需要花费的钱
+ * armorUpCost  单次的血量升级护甲需要花费的钱
+ * buyType      购买方式0:金币  1:砖石
+ * costNum      购买花费的金额
+ * upMax        升级上限
  */
 const skinData = [
     {
         "skinID": 0,
-        "armor": 2,
-        "speed": 5,
-        "blood": 2,
+        "blood": 1,
+        "speed": 2,
+        "armor": 1,
+        "bloodUp": 0.5,
+        "speedUp": 0.5,
+        "armorUp": 1,
+        "bloodUpCost": 3,
+        "speedUpCost": 1,
+        "armorUpCost": 2,
         "buyType": 0,
-        "costNum": 0
+        "costNum": 0,
+        "upMax": 3
     },
     {
         "skinID": 1,
-        "armor": 3,
-        "speed": 8,
-        "blood": 3,
+        "blood": 1,
+        "speed": 7,
+        "armor": 1,
+        "bloodUp": 0.5,
+        "speedUp": 1,
+        "armorUp": 0.5,
+        "bloodUpCost": 2,
+        "speedUpCost": 3,
+        "armorUpCost": 1,
         "buyType": 0,
-        "costNum": 30000
+        "costNum": 25000,
+        "upMax": 3
     },
     {
         "skinID": 2,
+        "blood": 3,
+        "speed": 1,
         "armor": 3,
-        "speed": 6,
-        "blood": 5,
+        "bloodUp": 0.5,
+        "speedUp": 0.5,
+        "armorUp": 2,
+        "bloodUpCost": 3,
+        "speedUpCost": 1,
+        "armorUpCost": 4,
         "buyType": 0,
-        "costNum": 100000
+        "costNum": 50000,
+        "upMax": 3
     },
     {
         "skinID": 3,
-        "armor": 6,
-        "speed": 6,
-        "blood": 8,
-        "buyType": 1,
-        "costNum": 200
+        "blood": 6.5,
+        "speed": 4,
+        "armor": 2,
+        "bloodUp": 0.5,
+        "speedUp": 1,
+        "armorUp": 1.5,
+        "bloodUpCost": 5,
+        "speedUpCost": 2,
+        "armorUpCost": 3,
+        "buyType": 0,
+        "costNum": 100000,
+        "upMax": 3
     },
     {
         "skinID": 4,
-        "armor": 8,
-        "speed": 8,
-        "blood": 10,
+        "blood": 3,
+        "speed": 7.5,
+        "armor": 1,
+        "bloodUp": 0.5,
+        "speedUp": 1.5,
+        "armorUp": 1,
+        "bloodUpCost": 3,
+        "speedUpCost": 4,
+        "armorUpCost": 2,
         "buyType": 1,
-        "costNum": 500
+        "costNum": 150,
+        "upMax": 3
+    },
+    {
+        "skinID": 5,
+        "blood": 6,
+        "speed": 1.5,
+        "armor": 4,
+        "bloodUp": 0.5,
+        "speedUp": 1,
+        "armorUp": 3,
+        "bloodUpCost": 5,
+        "speedUpCost": 2,
+        "armorUpCost": 5,
+        "buyType": 1,
+        "costNum": 300,
+        "upMax": 3
+    },
+    {
+        "skinID": 6,
+        "blood": 9,
+        "speed": 6,
+        "armor": 3,
+        "bloodUp": 1,
+        "speedUp": 1,
+        "armorUp": 2,
+        "bloodUpCost": 10,
+        "speedUpCost": 3,
+        "armorUpCost": 4,
+        "buyType": 1,
+        "costNum": 600,
+        "upMax": 3
     }
 ];
+
 /**
  * 机甲数据
+ * blood       血量
  * power       攻击
  * speed       速度 
  * keepTime    出现持续时间
@@ -640,27 +714,66 @@ const skinData = [
 const mechaData = [
     {
         "mechaID": 0,
-        "power": 7,
-        "speed": 5,
-        "keepTime": 35,
+        "blood": 5,
+        "power": 4,
+        "speed": 6,
+        "keepTime": 30,
         "buyType": 0,
-        "costNum": 5000
+        "costNum": 3000
     },
     {
         "mechaID": 1,
+        "blood": 6,
+        "power": 6,
+        "speed": 6,
+        "keepTime": 45,
+        "buyType": 0,
+        "costNum": 6000
+    },
+    {
+        "mechaID": 2,
+        "blood": 7,
         "power": 7,
-        "speed": 7,
-        "keepTime": 70,
+        "speed": 8,
+        "keepTime": 60,
+        "buyType": 0,
+        "costNum": 9000
+    },
+    {
+        "mechaID": 3,
+        "blood": 10,
+        "power": 9,
+        "speed": 8,
+        "keepTime": 60,
+        "buyType": 0,
+        "costNum": 12000
+    },
+    {
+        "mechaID": 4,
+        "blood": 7,
+        "power": 6,
+        "speed": 6,
+        "keepTime": 60,
         "buyType": 1,
         "costNum": 15
     },
     {
-        "mechaID": 2,
+        "mechaID": 5,
+        "blood": 10,
         "power": 10,
-        "speed": 4,
-        "keepTime": 90,
+        "speed": 8,
+        "keepTime": 60,
         "buyType": 1,
-        "costNum": 20
+        "costNum": 25
+    },
+    {
+        "mechaID": 6,
+        "blood": 12,
+        "power": 12,
+        "speed": 12,
+        "keepTime": 75,
+        "buyType": 1,
+        "costNum": 35
     }
 ];
 /**

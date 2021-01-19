@@ -9,7 +9,7 @@ const { ccclass, property } = cc._decorator;
 export default class ShopDialog extends cc.Component {
 
     @property(cc.Node)
-    tabActiveBox: cc.Node = null;
+    tabBox: cc.Node = null;
     @property(cc.Node)
     pageBox: cc.Node = null;
     @property(cc.Node)
@@ -17,8 +17,11 @@ export default class ShopDialog extends cc.Component {
     @property(cc.Node)
     buyBtn: cc.Node = null;
 
+    initIndex: number = 3; //初始界面下标
     lastIndex: number = null;
     nowIndex: number = null;
+    initPs: cc.Vec3[] = [];
+    moveDiff: cc.Vec2 = cc.v2(30, 15); //向下移动的距离
 
     onInit(index) {
         this.initUI(index);
@@ -28,9 +31,16 @@ export default class ShopDialog extends cc.Component {
     }
     initUI(index) {
         this.node.zIndex = 1000;
-        this.nowIndex = index || 0;
-        this.tabActiveBox.children[this.nowIndex].active = true;
+        this.tabBox.children.forEach(item => {
+            this.initPs.push(item.position);
+        });
+        this.nowIndex = index || this.initIndex;
         this.pageBox.children[this.nowIndex].active = true;
+        const target = this.tabBox.children[this.nowIndex];
+        target.getChildByName("active").active = true;
+        cc.tween(target)
+            .to(0.3, { position: cc.v3(target.x - this.moveDiff.x, target.y - this.moveDiff.y, 0) })
+            .start();
         this.lastIndex = this.nowIndex;
     }
     onBuyBtn() {
@@ -51,11 +61,25 @@ export default class ShopDialog extends cc.Component {
         AudioMag.getInstance().playSound("按钮音");
         if (this.nowIndex == index) return;
         this.nowIndex = index;
-        // console.log(this.nowIndex,this.lastIndex);
+        // console.log(this.nowIndex, this.lastIndex);
+        //显示页面
         this.pageBox.children[this.nowIndex].active = true;
         this.pageBox.children[this.lastIndex].active = false;
-        this.tabActiveBox.children[this.nowIndex].active = true;
-        this.tabActiveBox.children[this.lastIndex].active = false;
+        //显示相应tab
+        const tabBox = this.tabBox.children;
+        const target = tabBox[this.nowIndex];
+        //先把当前的移动下来
+        target.getChildByName("active").active = true;
+        cc.tween(target)
+            .to(0.3, { position: cc.v3(target.x - this.moveDiff.x, target.y - this.moveDiff.y, 0) })
+            .start();
+        //同时把上一个移动上去
+        const lastTarget = tabBox[this.lastIndex];
+        lastTarget.getChildByName("active").active = false;
+        const ps = this.initPs[this.lastIndex];
+        cc.tween(lastTarget)
+            .to(0.3, { position: ps })
+            .start();
         this.lastIndex = this.nowIndex;
     }
     skinBtn(e, index) {

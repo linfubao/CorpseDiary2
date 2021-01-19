@@ -21,8 +21,8 @@ export default class SkinPage extends cc.Component {
     buyBtn: cc.Node = null;
     @property({ type: cc.Node, tooltip: "装备" })
     equipBtn: cc.Node = null;
-    @property({ type: cc.Node, tooltip: "解除装备" })
-    unequipBtn: cc.Node = null;
+    // @property({ type: cc.Node, tooltip: "解除装备" })
+    // unequipBtn: cc.Node = null;
     @property({ type: cc.Node, tooltip: "试用" })
     tryBtn: cc.Node = null;
     @property(cc.Node)
@@ -35,30 +35,45 @@ export default class SkinPage extends cc.Component {
     skinName: cc.Sprite = null;
     @property(cc.Sprite)
     skinDesc: cc.Sprite = null;
-    @property(cc.Prefab)
-    singlePre: cc.Prefab = null;
     @property(cc.Node)
-    armorNode: cc.Node = null;
+    bloodNode: cc.Node = null;
     @property(cc.Node)
     speedNode: cc.Node = null;
     @property(cc.Node)
-    bloodNode: cc.Node = null;
+    armorNode: cc.Node = null;
     @property({ type: cc.Prefab, tooltip: "蛋壳预制体" })
     bulletShellsPre: cc.Prefab = null;
     @property({ type: cc.Node, tooltip: "蛋壳父节点" })
     shellsBox: cc.Node = null;
+    @property({ type: cc.Label, tooltip: "药水数量" })
+    optionLab: cc.Label = null;
+    @property({ type: cc.Node, tooltip: "打开升级界面的按钮" })
+    upgradeBtn: cc.Node = null; //属性全升级满了就隐藏
+    @property({ type: cc.Node, tooltip: "升级界面" })
+    upgradeModal: cc.Node = null;
+    @property(cc.Node)
+    roleContent: cc.Node = null;
 
     skinData: any[] = [];
-    clickFlag: number = null;//当前点击的是哪个武器,代表gunID
+    clickFlag: number = null;//当前点击的是哪个皮肤,代表skinID
     index: number = 0;
     len: number = 0;
-    pool: cc.NodePool = null;
     skillConfig: number[] = [];
-    armorCount: number = 0;
-    speedCount: number = 0;
     bloodCount: number = 0;
+    speedCount: number = 0;
+    armorCount: number = 0;
+    bloodMaxCount: number = 0;
+    speedMaxCount: number = 0;
+    armorMaxCount: number = 0;
+    bloodUpMaxCount: number = 0;
+    speedUpMaxCount: number = 0;
+    armorUpMaxCount: number = 0;
+    bloodUpCount: number = 0;
+    speedUpCount: number = 0;
+    armorUpCount: number = 0;
 
     onEnable() {
+        this.roleContent.getComponent("UIScrollSelect").init();
         this.skillConfig = GameMag.Ins.skillConfig;
         this.skinData = ConfigMag.Ins.getSkinData();
         this.len = this.skinData.length;
@@ -69,27 +84,14 @@ export default class SkinPage extends cc.Component {
             const data = ConfigMag.Ins.getSkinData()[useSkin];
             this.freshSkinPageUI(data);
         }
-        this.pool = new cc.NodePool();
-        for (let i = 0; i < 35; i++) {
-            let node = cc.instantiate(this.singlePre);
-            this.pool.put(node);
-        }
-        cc.director.on("freshSkinPageUI", this.freshSkinPageUI, this);
-        this.buyBtn.on(cc.Node.EventType.TOUCH_END, this.onBuy, this);
-        this.equipBtn.on(cc.Node.EventType.TOUCH_END, this.onEquip, this);
-        this.unequipBtn.on(cc.Node.EventType.TOUCH_END, this.onUnequip, this);
-        this.tryBtn.on(cc.Node.EventType.TOUCH_END, this.onTrySkin, this);
-    }
-    onTrySkin() {
-        console.log(this.clickFlag);
-        GameMag.Ins.trySkin = this.clickFlag;
-        this.freshBtns();
+        this.freshOption();
+        this.gameEvent();
     }
     loadItem() {
         let self = this;
         ToolsMag.Ins.getHomeResource("prefab/shop/skinItem", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
-            let sp = self.homeAtlas.getSpriteFrame("skin_" + self.index);
+            let sp = self.homeAtlas.getSpriteFrame("skinIcon_" + self.index);
             node.getComponent("skinItem").init(self.index, sp);
             node.parent = self.skinBox;
             self.index++;
@@ -98,14 +100,35 @@ export default class SkinPage extends cc.Component {
             }
         })
     }
+    gameEvent() {
+        cc.director.on("freshSkinPageUI", this.freshSkinPageUI, this);
+        cc.director.on("freshOption", this.freshOption, this);
+        this.buyBtn.on(cc.Node.EventType.TOUCH_END, this.onBuy, this);
+        this.equipBtn.on(cc.Node.EventType.TOUCH_END, this.onEquip, this);
+        // this.unequipBtn.on(cc.Node.EventType.TOUCH_END, this.onUnequip, this);
+        this.tryBtn.on(cc.Node.EventType.TOUCH_END, this.onTrySkin, this);
+        this.upgradeBtn.on(cc.Node.EventType.TOUCH_END, this.showUpgradeModal, this);
+    }
+    showUpgradeModal() {
+        const modal = this.upgradeModal;
+        modal.active = true;
+        modal.getComponent("upgradeModal").init(this.clickFlag);
+        modal.parent = this.node;
+    }
+    onTrySkin() {
+        console.log(this.clickFlag);
+        GameMag.Ins.trySkin = this.clickFlag;
+        this.freshBtns();
+    }
     /**
      * @param data 配置信息
      */
     freshSkinPageUI(data) {
-        if (this.clickFlag == data.skinID) {
-            this.showRole(data);
-            return;
-        }
+        // console.log(this.clickFlag, data.skinID);
+        // if (this.clickFlag == data.skinID) {
+        //     this.showRole(data);
+        //     return;
+        // }
         this.clickFlag = data.skinID;
         this.skinName.spriteFrame = this.homeAtlas.getSpriteFrame("sname_" + data.skinID);
         this.skinDesc.spriteFrame = this.homeAtlas.getSpriteFrame("skinDesc_" + data.skinID);
@@ -114,7 +137,16 @@ export default class SkinPage extends cc.Component {
         this.loadSkillBlock(data);
         this.freshCostBox(data);
     }
+    freshOption() {
+        const currency = GameMag.Ins.currency;
+        this.optionLab.string = String(currency.option);
+    }
+    scrollSkin(data) {
+        // console.log(data);
+        cc.director.emit("freshSkinItemActive", data.index);
+    }
     showRole(data) {
+        return;
         let gun = 0;
         GameMag.Ins.shopShowSkin = data.skinID;
         switch (data.skinID) {
@@ -259,23 +291,32 @@ export default class SkinPage extends cc.Component {
     freshBtns() {
         const localData = GameMag.Ins.skinData[this.clickFlag];
         const useSkin = GameMag.Ins.useingData.skin;
+        // console.log(localData);
         if (!localData.geted) {
             this.buyBtn.active = true;
+            this.upgradeBtn.active = false;
+            this.equipBtn.active = false;
         } else {
             this.buyBtn.active = false;
+            this.upgradeBtn.active = true;
             if (useSkin == localData.skinID) {
-                this.unequipBtn.active = true;
                 this.equipBtn.active = false;
             } else {
-                this.unequipBtn.active = false;
                 this.equipBtn.active = true;
             }
+            const cigData = ConfigMag.Ins.getSkinData()[this.clickFlag];
+            const upMax = cigData.upMax;
+            let isMax = true;
+            if (localData.bloodLv < upMax || localData.speedLv < upMax || localData.armorLv < upMax) {
+                isMax = false;
+            }
+            this.upgradeBtn.active = !isMax;
         }
-        if (GameMag.Ins.trySkin === this.clickFlag || this.clickFlag === 0) {
-            this.tryBtn.active = false;
-        } else {
-            this.tryBtn.active = true;
-        }
+        // if (GameMag.Ins.trySkin === this.clickFlag || this.clickFlag === 0) {
+        //     this.tryBtn.active = false;
+        // } else {
+        //     this.tryBtn.active = true;
+        // }
     }
     //购买皮肤
     onBuy() {
@@ -298,6 +339,8 @@ export default class SkinPage extends cc.Component {
         }
         GameMag.Ins.updateSkinData(this.clickFlag);
         GameMag.Ins.updateCurrency(data.buyType, -data.costNum);
+        GameMag.Ins.updateUseingDataBySkin(this.clickFlag);
+        cc.director.emit("freshSkinItemUI", this.clickFlag);
         cc.director.emit("updateCurrency");
         this.freshBtns();
         this.freshCostBox(data);
@@ -309,100 +352,175 @@ export default class SkinPage extends cc.Component {
         this.freshBtns();
         cc.director.emit("freshSkinItemUI", this.clickFlag);
     }
-    onUnequip() {
-        AudioMag.getInstance().playSound("按钮音");
-        GameMag.Ins.updateUseingDataBySkin(-1);
-        this.freshBtns();
-        cc.director.emit("freshSkinItemUI", 0);
-    }
+    //解除装备
+    // onUnequip() {
+    //     AudioMag.getInstance().playSound("按钮音");
+    //     GameMag.Ins.updateUseingDataBySkin(-1);
+    //     this.freshBtns();
+    //     cc.director.emit("freshSkinItemUI", 0);
+    // }
     //加载技能显示块
     loadSkillBlock(data) {
-        this.armorCount = 0;
-        this.speedCount = 0;
+        const info = GameMag.Ins.skinData[this.clickFlag];
+        // console.log(data);
         this.bloodCount = 0;
-        this.armorNode.destroyAllChildren();
-        this.speedNode.destroyAllChildren();
-        this.bloodNode.destroyAllChildren();
-        this.scheduleOnce(() => {
-            this.loadArmor(data);
-            this.loadSpeed(data);
-            this.loadBlood(data);
-        }, 0);
+        this.speedCount = 0;
+        this.armorCount = 0;
+        this.bloodUpCount = 0;
+        this.speedUpCount = 0;
+        this.armorUpCount = 0;
+        this.bloodMaxCount = info.blood * 2;
+        this.speedMaxCount = info.speed * 2;
+        this.armorMaxCount = info.armor * 2;
+        this.bloodUpMaxCount = data.bloodUp * 2;
+        this.speedUpMaxCount = data.speedUp * 2;
+        this.armorUpMaxCount = data.armorUp * 2;
+        this.putBlock(this.bloodNode);
+        this.putBlock(this.speedNode);
+        this.putBlock(this.armorNode);
+        this.unschedule(this.showSkillBlock);
+        this.scheduleOnce(this.showSkillBlock, 0.3);
     }
-    getSkillNode() {
-        let node = null;
-        if (this.pool.size() > 0) {
-            node = this.pool.get();
-        } else {
-            node = cc.instantiate(this.singlePre);
-        }
-        return node;
+    showSkillBlock() {
+        this.loadBlood();
+        this.loadSpeed();
+        this.loadArmor();
     }
-    loadArmor(data) {
-        let armorNum = data.armor;
-        let node = this.getSkillNode();
-        node.stopAllActions();
-        node.getChildByName("bg").color = cc.color(255, 179, 0);
-        node.parent = this.armorNode;
-        node.scale = 0;
-        cc.tween(node)
-            .to(this.skillConfig[0], { scale: this.skillConfig[1] })
-            .call(() => {
-                this.armorCount++;
-                if (this.armorCount < armorNum) {
-                    this.loadArmor(data);
-                }
-            })
-            .to(this.skillConfig[2], { scale: 1 })
-            .start();
+    loadBlood() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.stopAllActions();
+            node.parent = self.bloodNode;
+            node.getChildByName("blue").active = false;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.bloodCount++;
+                    if (self.bloodCount < self.bloodMaxCount) {
+                        self.loadBlood();
+                    } else {
+                        self.loadBlueBlood();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        });
     }
-    loadSpeed(data) {
-        let speedNum = data.speed;
-        let node = this.getSkillNode();
-        node.stopAllActions();
-        node.getChildByName("bg").color = cc.color(50, 223, 17);
-        node.parent = this.speedNode;
-        node.scale = 0;
-        cc.tween(node)
-            .to(this.skillConfig[0], { scale: this.skillConfig[1] })
-            .call(() => {
-                this.speedCount++;
-                if (this.speedCount < speedNum) {
-                    this.loadSpeed(data);
-                }
-            })
-            .to(this.skillConfig[2], { scale: 1 })
-            .start();
+    loadBlueBlood() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.getChildByName("blue").active = true;
+            node.stopAllActions();
+            node.parent = self.bloodNode;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.bloodUpCount++;
+                    if (self.bloodUpCount < self.bloodUpMaxCount) {
+                        self.loadBlueBlood();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        })
     }
-    loadBlood(data) {
-        let bloodNum = data.blood;
-        let node = this.getSkillNode();
-        node.stopAllActions();
-        node.getChildByName("bg").color = cc.color(0, 134, 240);
-        node.parent = this.bloodNode;
-        node.scale = 0;
-        cc.tween(node)
-            .to(this.skillConfig[0], { scale: this.skillConfig[1] })
-            .call(() => {
-                this.bloodCount++;
-                if (this.bloodCount < bloodNum) {
-                    this.loadBlood(data);
-                }
-            })
-            .to(this.skillConfig[2], { scale: 1 })
-            .start();
+    loadSpeed() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.stopAllActions();
+            node.parent = self.speedNode;
+            node.getChildByName("blue").active = false;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.speedCount++;
+                    if (self.speedCount < self.speedMaxCount) {
+                        self.loadSpeed();
+                    } else {
+                        self.loadBlueSpeed();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        })
+    }
+    loadBlueSpeed() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.getChildByName("blue").active = true;
+            node.stopAllActions();
+            node.parent = self.speedNode;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.speedUpCount++;
+                    if (self.speedUpCount < self.speedUpMaxCount) {
+                        self.loadBlueSpeed();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        })
+    }
+    loadArmor() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.stopAllActions();
+            node.parent = self.armorNode;
+            node.getChildByName("blue").active = false;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.armorCount++;
+                    if (self.armorCount < self.armorMaxCount) {
+                        self.loadArmor();
+                    } else {
+                        self.loadBlueArmor();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        })
+    }
+    loadBlueArmor() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.getChildByName("blue").active = true;
+            node.stopAllActions();
+            node.parent = self.armorNode;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.armorUpCount++;
+                    if (self.armorUpCount < self.armorUpMaxCount) {
+                        self.loadBlueArmor();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        })
     }
     onDisable() {
         GameMag.Ins.shopShowGun = null;
         GameMag.Ins.shopShowSkin = null;
-        this.armorCount = 0;
-        this.speedCount = 0;
-        this.bloodCount = 0;
-        this.armorNode.destroyAllChildren();
-        this.speedNode.destroyAllChildren();
-        this.bloodNode.destroyAllChildren();
-        this.loadArmor(this.skinData[this.clickFlag]);
-        this.loadSpeed(this.skinData[this.clickFlag]);
-        this.loadBlood(this.skinData[this.clickFlag]);
+        this.putBlock(this.bloodNode);
+        this.putBlock(this.speedNode);
+        this.putBlock(this.armorNode);
+    }
+    //回收
+    putBlock(parentNode: cc.Node) {
+        parentNode.children.forEach(item => {
+            item.getChildByName("blue").active = false;
+            item.stopAllActions();
+            this.scheduleOnce(() => {
+                GameMag.Ins.putSkillBlock(item);
+            }, 0)
+        });
     }
 }

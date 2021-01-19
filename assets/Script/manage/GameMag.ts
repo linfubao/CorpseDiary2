@@ -98,7 +98,7 @@ export default class GameMag extends cc.Component {
     useingGuns: any[] = [null, null, null, null]; //带进游戏的四把枪,游戏内的显示顺序以商店装备的顺序为准
     useingAssist: any[] = [null, null, null]; //带进游戏的三个辅助道具
     isUseingMecha: boolean = false; //是否正在使用机甲
-    skillConfig: number[] = [0.15, 1.13, 0.05];
+    skillConfig: number[] = [0.06, 1.11, 0.05];
     shopShowGun: number = null;
     shopShowSkin: number = null;
     scrollToSkin: number = 0; //建议使用那里点击显示商店界面
@@ -395,11 +395,12 @@ export default class GameMag extends cc.Component {
         // console.log("本地辅助道具数据", this.assistData);
     }
     initSkinData() {
-        let len = ConfigMag.Ins.getSkinData().length;
+        let skinCigData = ConfigMag.Ins.getSkinData();
         let data = [];
-        data.push({ skinID: 0, geted: true });
-        for (let index = 1; index < len; index++) {
-            data.push({ skinID: index, geted: false });
+        //先把第一个默认皮肤放进来
+        data.push({ skinID: 0, geted: true, blood: skinCigData[0].blood, bloodLv: 0, speed: skinCigData[0].speed, speedLv: 0, armor: skinCigData[0].armor, armorLv: 0 });
+        for (let index = 1; index < skinCigData.length; index++) {
+            data.push({ skinID: index, geted: false, blood: skinCigData[0].blood, bloodLv: 0, speed: skinCigData[0].speed, speedLv: 0, armor: skinCigData[0].armor, armorLv: 0 });
         }
         let init = cc.sys.localStorage.getItem('skinData');
         if (!init) {
@@ -409,6 +410,49 @@ export default class GameMag extends cc.Component {
             this.skinData = JSON.parse(init);
         }
         // console.log("本地皮肤数据", this.skinData);
+    }
+    /**
+     * 更新皮肤获得数据
+     * @param id 直接传入获得的皮肤id
+     */
+    updateSkinData(id) {
+        this.skinData[id].geted = true;
+        cc.sys.localStorage.setItem('skinData', JSON.stringify(this.skinData));
+    }
+    /**
+     * 更新皮肤升级数据
+     * @param id    直接传入要升级的皮肤id
+     * @param type  0:血量 1:速度  2:护甲
+     * @param num   升级的技能数值
+     */
+    updateSkinDataUpgrade(id, type, num) {
+        const max: number = (ConfigMag.Ins.getSkinData()[id]).upMax;
+        switch (type) {
+            case 0:
+                // if (this.skinData[id].bloodLv == max) {
+                //     return true;
+                // }
+                this.skinData[id].bloodLv++;
+                this.skinData[id].blood += num;
+                break;
+            case 1:
+                // if (this.skinData[id].speedLv == max) {
+                //     return true;
+                // }
+                this.skinData[id].speedLv++;
+                this.skinData[id].speed += num;
+                break;
+            case 2:
+                // if (this.skinData[id].armorLv == max) {
+                //     return true;
+                // }
+                this.skinData[id].armorLv++;
+                this.skinData[id].armor += num;
+                break;
+            default:
+                break;
+        }
+        cc.sys.localStorage.setItem('skinData', JSON.stringify(this.skinData));
     }
     initUseingData() {
         //skin:使用中的皮肤, gun:当前正在使用的枪, gunEquip:装备中的武器列表,assistEquip:装备中的辅助道具列表
@@ -504,14 +548,6 @@ export default class GameMag extends cc.Component {
         this.useingData.mecha = index || mechaID;
         cc.sys.localStorage.setItem('useingData', JSON.stringify(this.useingData));
     }
-    /**
-     * 更新皮肤数据
-     * @param id 直接传入皮肤id
-     */
-    updateSkinData(id) {
-        this.skinData[id].geted = true;
-        cc.sys.localStorage.setItem('skinData', JSON.stringify(this.skinData));
-    }
     initGunData() {
         let localGunData = ConfigMag.Ins.getGunData();
         let data = [];
@@ -568,31 +604,37 @@ export default class GameMag extends cc.Component {
     initCurrency() {
         let data = cc.sys.localStorage.getItem('currency');
         if (!data) {
-            let init = { coin: 2000, diamond: 5 };
+            let init = { coin: 2000, diamond: 5, option: 3 };
             cc.sys.localStorage.setItem('currency', JSON.stringify(init));
             this.currency = init;
         } else {
             this.currency = JSON.parse(data);
         }
-        console.log("本地货币", this.currency);
+        // console.log("本地货币", this.currency);
     }
     /**
      * 更新本地缓存货币数据
-     * @param type 0:金币  1:钻石
+     * @param type 0:金币 1:钻石  2:药水
      * @param addNum 扣钱直接传负数
      */
     updateCurrency(type: number, addNum: number) {
-        let data = JSON.parse(cc.sys.localStorage.getItem("currency"));
         let rate = null;
-        if (type === 0) {
-            rate = this.doubleCoinTime ? 2 : 1;
-            data.coin += (addNum * rate);
-        } else {
-            rate = this.doubleDiamondTime ? 2 : 1;
-            data.diamond += (addNum * rate);
+        switch (type) {
+            case 0:
+                rate = this.doubleCoinTime ? 2 : 1;
+                this.currency.coin += (addNum * rate);
+                break;
+            case 1:
+                rate = this.doubleDiamondTime ? 2 : 1;
+                this.currency.diamond += (addNum * rate);
+                break;
+            case 2:
+                this.currency.option += addNum;
+                break;
+            default:
+                break;
         }
-        this.currency = data;
-        cc.sys.localStorage.setItem('currency', JSON.stringify(data));
+        cc.sys.localStorage.setItem('currency', JSON.stringify(this.currency));
     }
     /**
      * 本地成就数据
@@ -681,7 +723,7 @@ export default class GameMag extends cc.Component {
                 this.taskData = oldData;
             }
         }
-        console.log("本地每日任务数据", this.taskData);
+        // console.log("本地每日任务数据", this.taskData);
     }
     /**
      * 更新每日任务是否获取过
@@ -865,6 +907,33 @@ export default class GameMag extends cc.Component {
     bulletPool: cc.NodePool = null;
     mechaBulletPool: cc.NodePool = null;
     rewardNumPool: cc.NodePool = null;//击杀小怪后漂浮的奖励金额
+    skillBlockPool: cc.NodePool = null;//商店的技能小方块
+    initHomePools() {
+        let self = this;
+        this.skillBlockPool = new cc.NodePool();
+        ToolsMag.Ins.getHomeResource("prefab/shop/singleSkill", function (prefab: cc.Prefab) {
+            let node = cc.instantiate(prefab);
+            for (let i = 0; i < 20; i++) {
+                self.skillBlockPool.put(node);
+            }
+        })
+    }
+    getSkillBlock(cb) {
+        let node = null;
+        if (this.skillBlockPool.size() > 0) {
+            node = this.skillBlockPool.get();
+            cb && cb(node);
+            return;
+        };
+        ToolsMag.Ins.getHomeResource("prefab/shop/singleSkill", function (prefab: cc.Prefab) {
+            // console.log("标记:::::::", tag);
+            node = cc.instantiate(prefab);
+            cb && cb(node);
+        });
+    }
+    putSkillBlock(node) {
+        this.skillBlockPool.put(node);
+    }
     initGamePools() {
         let self = this;
         let corpsePool0 = new cc.NodePool();
@@ -920,6 +989,7 @@ export default class GameMag extends cc.Component {
         this.enemyPool.push(enemy10);
         this.enemyPool.push(enemy11);
         this.enemyPool.push(enemy12);
+
 
         this.rewardNumPool = new cc.NodePool();
         ToolsMag.Ins.getGameResource("prefab/killRewardNum", function (prefab: cc.Prefab) {

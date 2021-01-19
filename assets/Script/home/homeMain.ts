@@ -89,6 +89,7 @@ export default class HomeMain extends cc.Component {
         // this.initMoreGame();
         // this.initRewardBuff();
         this.gameEvents();
+        GameMag.Ins.initHomePools();
     }
     initRewardBuff() {
         this.coinBuffBtn.on(cc.Node.EventType.TOUCH_END, this.onGetCoinBuff, this);
@@ -559,7 +560,7 @@ export default class HomeMain extends cc.Component {
         GameMag.Ins.updateTaskTypeArr(initArr);
         console.log("任务列表:", initArr);
         GameMag.Ins.taskTypeArr = initArr;
-        let arr = [0, 1, 2, 3, 4, 5, 6];//主页地图坐标的下标
+        let arr = [0, 1, 2, 3, 4, 5];//主页地图坐标的下标
         if (lv == 1) {
             arr = [0]; //第一关固定放在第一个位置
         } else {
