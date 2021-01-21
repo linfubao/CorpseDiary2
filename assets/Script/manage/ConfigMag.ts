@@ -581,6 +581,7 @@ const gunData = [
     }
 ]
 /**
+ * talent       天赋
  * blood        血量
  * speed        速度
  * armor        护甲
@@ -597,6 +598,7 @@ const gunData = [
 const skinData = [
     {
         "skinID": 0,
+        "talent": 0,
         "blood": 1,
         "speed": 2,
         "armor": 1,
@@ -612,6 +614,7 @@ const skinData = [
     },
     {
         "skinID": 1,
+        "talent": 0.2,
         "blood": 1,
         "speed": 7,
         "armor": 1,
@@ -627,6 +630,7 @@ const skinData = [
     },
     {
         "skinID": 2,
+        "talent": 0.2,
         "blood": 3,
         "speed": 1,
         "armor": 3,
@@ -642,6 +646,7 @@ const skinData = [
     },
     {
         "skinID": 3,
+        "talent": 0.2,
         "blood": 6.5,
         "speed": 4,
         "armor": 2,
@@ -657,6 +662,7 @@ const skinData = [
     },
     {
         "skinID": 4,
+        "talent": 0.2,
         "blood": 3,
         "speed": 7.5,
         "armor": 1,
@@ -672,6 +678,7 @@ const skinData = [
     },
     {
         "skinID": 5,
+        "talent": 0.01,
         "blood": 6,
         "speed": 1.5,
         "armor": 4,
@@ -687,6 +694,7 @@ const skinData = [
     },
     {
         "skinID": 6,
+        "talent": 0.2,
         "blood": 9,
         "speed": 6,
         "armor": 3,
@@ -707,7 +715,7 @@ const skinData = [
  * blood       血量
  * power       攻击
  * speed       速度 
- * keepTime    出现持续时间
+ * keepTime    出现持续时间,使用机甲的时候,辅助道具和机甲同时倒计时,即使在使用之前,辅助道具已经开启了自己的倒计时
  * buyType     购买方式0:金币  1:砖石
  * costNum     购买花费的金额
  */
@@ -778,9 +786,9 @@ const mechaData = [
 ];
 /**
  * 辅助道具数据
- * assistType  "类型"   0:恢复血量  1:减少伤害  2:增加攻击  3:增加移动速度  4:呼叫支援  
- * assistSize  小中大:123
- * assistNum   效果数值百分比  当前剩余的血量+角色总量*百分比
+ * assistType  "类型"  0:恢复血量  1:减少伤害  2:增加攻击  3:增加移动速度  4:呼叫天降炸弹支援 5:重机枪 6:无人机
+ * assistSize  0:小  1:大  2:其他
+ * effectNum   效果数值百分比  当前剩余的血量+角色总量*百分比
  * assistTime  效果持续时间
  * buyType     购买方式0:金币  1:砖石
  * costNum     购买花费的金额
@@ -789,137 +797,110 @@ const assistData = [
     {
         "assistID": 0,
         "assistType": 0,
-        "assistSize": 1,
-        "assistNum": 50,
-        "assistTime": 0,
+        "assistSize": 0,
+        "effectNum": 50,
+        "assistTime": 15,
         "buyType": 0,
-        "costNum": 500
+        "costNum": 1000
     },
     {
         "assistID": 1,
         "assistType": 0,
-        "assistSize": 2,
-        "assistNum": 75,
-        "assistTime": 0,
-        "buyType": 0,
-        "costNum": 750
+        "assistSize": 1,
+        "effectNum": 100,
+        "assistTime": 15,
+        "buyType": 1,
+        "costNum": 4
     },
     {
         "assistID": 2,
-        "assistType": 0,
-        "assistSize": 3,
-        "assistNum": 100,
-        "assistTime": 0,
+        "assistType": 1,
+        "assistSize": 0,
+        "effectNum": 50,
+        "assistTime": 15,
         "buyType": 0,
-        "costNum": 1000
+        "costNum": 1500
     },
     {
         "assistID": 3,
         "assistType": 1,
         "assistSize": 1,
-        "assistNum": 75,
-        "assistTime": 10,
-        "buyType": 0,
-        "costNum": 1000
+        "effectNum": 100,
+        "assistTime": 15,
+        "buyType": 1,
+        "costNum": 6
     },
     {
         "assistID": 4,
-        "assistType": 1,
-        "assistSize": 2,
-        "assistNum": 90,
-        "assistTime": 20,
+        "assistType": 2,
+        "assistSize": 0,
+        "effectNum": 50,
+        "assistTime": 15,
         "buyType": 0,
-        "costNum": 2000
+        "costNum": 1250
     },
     {
         "assistID": 5,
-        "assistType": 1,
-        "assistSize": 3,
-        "assistNum": 100,
-        "assistTime": 30,
-        "buyType": 0,
-        "costNum": 3000
+        "assistType": 2,
+        "assistSize": 1,
+        "effectNum": 100,
+        "assistTime": 15,
+        "buyType": 1,
+        "costNum": 5
     },
     {
         "assistID": 6,
-        "assistType": 2,
-        "assistSize": 1,
-        "assistNum": 75,
-        "assistTime": 10,
+        "assistType": 3,
+        "assistSize": 0,
+        "effectNum": 50,
+        "assistTime": 15,
         "buyType": 0,
         "costNum": 1000
     },
     {
         "assistID": 7,
-        "assistType": 2,
-        "assistSize": 2,
-        "assistNum": 90,
-        "assistTime": 20,
-        "buyType": 0,
-        "costNum": 2000
+        "assistType": 3,
+        "assistSize": 1,
+        "effectNum": 100,
+        "assistTime": 15,
+        "buyType": 1,
+        "costNum": 4
     },
     {
         "assistID": 8,
-        "assistType": 2,
-        "assistSize": 3,
-        "assistNum": 100,
-        "assistTime": 30,
-        "buyType": 0,
-        "costNum": 3000
+        "assistType": 4,
+        "assistSize": 2,
+        "effectNum": 0,
+        "assistTime": 15,
+        "buyType": 1,
+        "costNum": 3
     },
     {
         "assistID": 9,
-        "assistType": 3,
-        "assistSize": 1,
-        "assistNum": 75,
-        "assistTime": 10,
-        "buyType": 0,
-        "costNum": 1000
+        "assistType": 5,
+        "assistSize": 2,
+        "effectNum": 7,
+        "assistTime": 35,
+        "buyType": 1,
+        "costNum": 6
     },
     {
         "assistID": 10,
-        "assistType": 3,
-        "assistSize": 2,
-        "assistNum": 90,
-        "assistTime": 20,
+        "assistType": 6,
+        "assistSize": 0,
+        "effectNum": 5,
+        "assistTime": 45,
         "buyType": 0,
         "costNum": 2000
     },
     {
         "assistID": 11,
-        "assistType": 3,
-        "assistSize": 3,
-        "assistNum": 100,
-        "assistTime": 30,
-        "buyType": 0,
-        "costNum": 3000
-    },
-    {
-        "assistID": 12,
-        "assistType": 4,
+        "assistType": 6,
         "assistSize": 1,
-        "assistNum": 1,
-        "assistTime": 0,
-        "buyType": 0,
-        "costNum": 1000
-    },
-    {
-        "assistID": 13,
-        "assistType": 4,
-        "assistSize": 2,
-        "assistNum": 2,
-        "assistTime": 0,
-        "buyType": 0,
-        "costNum": 2000
-    },
-    {
-        "assistID": 14,
-        "assistType": 4,
-        "assistSize": 3,
-        "assistNum": 3,
-        "assistTime": 0,
-        "buyType": 0,
-        "costNum": 3000
+        "effectNum": 8,
+        "assistTime": 45,
+        "buyType": 1,
+        "costNum": 8
     }
 ];
 /**

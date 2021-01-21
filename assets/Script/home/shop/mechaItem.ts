@@ -21,35 +21,32 @@ export default class MechaItem extends cc.Component {
     index: number = 0;
     init(data, index, sf) {
         // console.log(data);
-        if (index == 0) { //每次进来默认高亮第一个
-            // this.actives.active = true;
-            this.showIcon(this.actives, 0.1, 1.5);
+        this.mechaData = data;
+        this.index = index;
+        this.icon.spriteFrame = sf;
+        this.getNum.string = String("x" + data.getNum);
+        let useringMecha = GameMag.Ins.useingData.mecha;
+        if (data.getNum > 0 && index == useringMecha) {
+            this.showScale(this.actives, 0.1, 1.5);
+            this.showScale(this.equipIcon, 0.25, 2.5);//当前使用的是哪个皮肤,就显示打钩
+            this.showIcon();
             let arr = ConfigMag.Ins.getMechaData();
             cc.director.emit("freshMechaPageUI", arr[index]);
-            // cc.director.emit("scrollToMecha", index);
+        }
+        if (index == 0) { //每次进来默认高亮第一个
+            this.showScale(this.actives, 0.1, 1.5);
+            let arr = ConfigMag.Ins.getMechaData();
+            cc.director.emit("freshMechaPageUI", arr[index]);
         } else {
             this.actives.active = false;
         }
-        let useringMecha = GameMag.Ins.useingData.mecha;
-        if (data.getNum > 0 && index == useringMecha) {
-            this.showIcon(this.actives, 0.1, 1.5);
-            this.showIcon(this.equipIcon, 0.25, 2.5);//当前使用的是哪个皮肤,就显示打钩
-            let arr = ConfigMag.Ins.getMechaData();
-            cc.director.emit("freshMechaPageUI", arr[index]);
-            // cc.director.emit("scrollToMecha", index);
-        }else{
-            this.actives.active = false;
-        }
-        this.mechaData = data;
-        this.index = index;
-        // this.icon.spriteFrame = sf;
-        this.getNum.string = String("x" + data.getNum);
+
         cc.director.on("freshMechaItemUI", this.freshMechaItemUI, this);
         cc.director.on("freshMechaItemActive", this.showItemActive, this);
         cc.director.on("freshEquipIcon", this.freshEquipIcon, this);
         this.node.on(cc.Node.EventType.TOUCH_END, this.onStartTouch, this);
     }
-    showIcon(target, smallTime, bigScale) {
+    showScale(target, smallTime, bigScale) {
         target.active = true;
         target.scale = bigScale;
         cc.tween(target)
@@ -58,15 +55,16 @@ export default class MechaItem extends cc.Component {
             .to(0.025, { scale: 1 })
             .start();
     }
+    showIcon() {
+        this.icon.node.scale = 1;
+        cc.tween(this.icon.node)
+            .to(0.07, { scale: 1.3 })
+            .to(0.07, { scale: 1 })
+            .start();
+    }
     onStartTouch() {
         AudioMag.getInstance().playSound("按钮音");
-        let data = ConfigMag.Ins.getMechaData();
-        cc.director.emit("freshMechaPageUI", data[this.index]);
-        this.node.parent.children.forEach(item => {
-            item.getChildByName("active").active = false;
-        })
-        this.showIcon(this.actives, 0.1, 1.5);
-        cc.director.emit("scrollToMecha", this.index);
+        this.freshUI();
     }
     showItemActive(index) {
         if (index == this.index) {
@@ -78,8 +76,8 @@ export default class MechaItem extends cc.Component {
         this.node.parent.children.forEach((item) => {
             item.getChildByName("active").active = false;
         })
-        this.showIcon(this.actives, 0.1, 1.5);
-        this.showIcon(this.icon.node, 0.1, 1.5);
+        this.showScale(this.actives, 0.1, 1.5);
+        this.showIcon();
         cc.director.emit("scrollToMecha", this.index);
     }
     freshEquipIcon() {
@@ -89,7 +87,10 @@ export default class MechaItem extends cc.Component {
         if (this.index == index) {
             let data = GameMag.Ins.mechaData[index];
             this.getNum.string = String("x" + data.getNum);
-            this.showIcon(this.equipIcon, 0.25, 2.5);//当前使用的是哪个皮肤,就显示打钩
+            if (!this.equipIcon.active) {
+                this.showScale(this.equipIcon, 0.25, 2.5);//当前使用的是哪个皮肤,就显示打钩
+            }
+            this.showScale(this.actives, 0.1, 1.5);
             GameMag.Ins.updateUseingDataByMecha(index);
         } else {
             this.equipIcon.active = false;

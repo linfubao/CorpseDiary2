@@ -79,7 +79,6 @@ export default class GunPage extends cc.Component {
         this.equipLen = this.equipData.length;
         this.loadItem();
         this.loadEquipItem();
-
         this.pool = new cc.NodePool();
         for (let i = 0; i < 35; i++) {
             let node = cc.instantiate(this.singlePre);
@@ -107,7 +106,8 @@ export default class GunPage extends cc.Component {
         ToolsMag.Ins.getHomeResource("prefab/shop/gunEquip", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
             let gunID = self.equipData[self.equipIndex];
-            let sf = self.homeAtlas.getSpriteFrame("gun_" + gunID);
+            let lv = 0;
+            let sf = self.homeAtlas.getSpriteFrame(`gunName_${gunID}_${lv}`);
             node.getComponent("gunEquip").init(gunID, self.equipIndex, sf);
             node.parent = self.equipBox;
             self.equipIndex++;
@@ -166,25 +166,20 @@ export default class GunPage extends cc.Component {
         const data = this.gunData[this.clickFlag];
         let costNum = data.costNum;
         let currency = GameMag.Ins.currency;
-        if (data.buyType == 0) {
-            if (currency.coin < costNum) {
-                // DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["金币不足"]);
-                cc.director.emit("shopCoinPage");
-                return; //钱不够买
-            }
-        } else {
-            if (currency.diamond < costNum) {
-                // DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["钻石不足"]);
-                cc.director.emit("shopCoinPage");
-                return; //钱不够买
-            }
+        if (data.buyType === 0 && (currency.coin < costNum)) {
+            // DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["金币不足"]);
+            cc.director.emit("shopCoinPage");
+            return;
+        }
+        if (data.buyType === 1 && (currency.diamond < costNum)) {
+            cc.director.emit("shopCoinPage");
+            return;
         }
         if (data.buyOnceNum != 0) { //需要买子弹的枪
             GameMag.Ins.updateGunDataByBulletNum(this.clickFlag, 50);
             this.bulletNumLab.string = String(50);
             this.freshGunPageUI(data);
         }
-
         GameMag.Ins.updateUseingDataByGun(this.clickFlag);
         GameMag.Ins.updateGunDataByGeted(this.clickFlag);
         GameMag.Ins.updateCurrency(data.buyType, -data.costNum);
@@ -252,8 +247,9 @@ export default class GunPage extends cc.Component {
         let self = this;
         ToolsMag.Ins.getHomeResource("prefab/shop/gunItem", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
-            let sf = self.homeAtlas.getSpriteFrame("gun_" + self.index);
-            let gunNameSf = self.homeAtlas.getSpriteFrame("gname_" + self.index);
+            let sf = self.homeAtlas.getSpriteFrame("gunIcon_" + self.index);
+            let lv = 0;
+            let gunNameSf = self.homeAtlas.getSpriteFrame(`gunName_${self.index}_${lv}`);
             node.getComponent("gunItem").init(self.index, self.gunData[self.index], sf, gunNameSf);
             node.parent = self.gunBox;
             self.index++;
@@ -271,7 +267,7 @@ export default class GunPage extends cc.Component {
         this.clickFlag = data.gunID;
         let localData = GameMag.Ins.gunData[data.gunID];
         // console.log(data, localData);
-        this.gunName.spriteFrame = this.homeAtlas.getSpriteFrame("gname_" + data.gunID);
+        this.gunName.spriteFrame = this.homeAtlas.getSpriteFrame("gunName_" + data.gunID);
         this.gunDesc.spriteFrame = this.homeAtlas.getSpriteFrame("gunDesc_" + data.gunDescType);
         let lockStatus = localData.lockStatus;
         // console.log("lockStatus", lockStatus);

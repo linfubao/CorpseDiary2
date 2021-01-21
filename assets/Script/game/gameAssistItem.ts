@@ -19,14 +19,19 @@ export default class gameAssistItem extends cc.Component {
     index: number = null;
     cigData: any = null;
     lastNum: number = 0;//剩余子弹
-    _t: number = 15;
+    countTime: number = null;//计时
+    assistTime: number = null;
+    mechaTime: number = null;
 
     init(assistID, index, sf) {
         this.assistID = assistID;
         this.index = index;
         this.icon.spriteFrame = sf;
-        this.cigData = ConfigMag.Ins.getAssistData();
+        this.cigData = ConfigMag.Ins.getAssistData()[assistID];
+        this.assistTime = this.cigData.assistTime;
+        this.countTime = this.assistTime;
         this.initUI();
+        cc.director.on("useingMecha", this.useingMecha, this);
         this.node.on(cc.Node.EventType.TOUCH_END, this.onTouch, this);
     }
     initUI() {
@@ -49,48 +54,69 @@ export default class gameAssistItem extends cc.Component {
         this.buffer.node.active = true;
         this.buffer.progress = 1;
         this.unschedule(this.countDown);
-        this.schedule(this.countDown, 1 / this._t);
+        this.schedule(this.countDown, 1);
         GameMag.Ins.updateAssistData(this.assistID, -1);
         this.lastNum--;
         this.bulletNum.string = String(this.lastNum);
         // console.log(this.lastNum);
         if (this.lastNum == 0) {
             this.icon.node.color = cc.color(115, 115, 115);
-            GameMag.Ins.updateUseingDataByAssistEquip(-1, this.index);
+            GameMag.Ins.updateUseingDataByAssistEquip(-2, this.index);
         }
     }
+    useingMecha(status) {
+        if (!status) {
+            this.countTime = null;
+            this.node.resumeSystemEvents(true);
+            this.unschedule(this.countDown);
+            return;
+        }
+        this.node.pauseSystemEvents(true);
+        this.buffer.node.active = true;
+        this.buffer.progress = 1;
+        const useMecha = GameMag.Ins.useingData.mecha;
+        const mechaCigData = ConfigMag.Ins.getMechaData()[useMecha];
+        this.countTime = mechaCigData.keepTime;
+        this.mechaTime = mechaCigData.keepTime;
+        this.unschedule(this.countDown);
+        this.schedule(this.countDown, 1);
+    }
     useAssist() {
-        let info = GameMag.Ins.searchAssistData(this.cigData, this.assistID);
+        let info = this.cigData;
         // console.log(info);
         let assistType = info.assistType;
-        let assistNum = info.assistNum;
+        let effectNum = info.effectNum;
         let assistTime = info.assistTime;
         let assistSize = info.assistSize;
         switch (assistType) {
             case 0://加血
-                cc.director.emit("useAssistBlood", assistNum);
+                cc.director.emit("useAssistBlood", effectNum);
                 break;
             case 1://减伤
-                cc.director.emit("useAssistHurt", assistNum, assistTime);
+                cc.director.emit("useAssistHurt", effectNum, assistTime);
                 break;
             case 2://增加攻击
-                cc.director.emit("useAssist", 2, assistNum, assistTime);
+                cc.director.emit("useAssist", 2, effectNum, assistTime);
                 break;
             case 3://增加移动速度
-                cc.director.emit("useAssist", 3, assistNum, assistTime);
+                cc.director.emit("useAssist", 3, effectNum, assistTime);
                 break;
             case 4://导弹
-                cc.director.emit("useAssistMissile", assistSize);
+                cc.director.emit("useAssistMissile", 3);
                 break;
             default:
                 break;
         }
     }
     countDown() {
-        this.buffer.progress -= 1 / this._t / this._t;
-        if (this.buffer.progress <= 0) {
-            this.unschedule(this.countDown);
+        if (!this.countTime) return;
+        this.countTime--;
+        const time = this.mechaTime || this.assistTime;
+        this.buffer.progress -= 1 / time;
+        if (this.countTime <= 0) {
+            this.countTime = null;
             this.node.resumeSystemEvents(true);
+            this.unschedule(this.countDown);
         }
     }
     onDisable() {

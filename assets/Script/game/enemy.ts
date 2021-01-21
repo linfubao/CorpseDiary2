@@ -14,7 +14,6 @@ export default class Enemy extends cc.Component {
     @property(dragonBones.ArmatureDisplay)
     dragon: dragonBones.ArmatureDisplay = null;
 
-    corpsePrefab: cc.Prefab = null;
     groundY: number = -190; //尸块掉到地板的坐标
     touchRole: boolean = false; //控制伤害时机
     roleCanMove: boolean = true;//控制移动时机
@@ -24,6 +23,8 @@ export default class Enemy extends cc.Component {
     die: boolean = false;
     attackComplete: boolean = true;
     tag: number = null; //敌怪的标识
+    talent: number = null; //主角2的天赋
+    talentToGun: number = null; //主角6的天赋
     speed: number = 0;
     blood: number = 0;
     initBlood: number = 0;
@@ -51,13 +52,21 @@ export default class Enemy extends cc.Component {
         this.initData(tag);
         this.enemyAnimate(enemyAnimate.Walk0, 0);
     }
+    //因为小怪是做了对象池回收的,所以每次拿出来用都要初始化数据
     initData(tag) {
         this.tag = tag;
-        let data = ConfigMag.Ins.getEnemyData();
-        this.speed = data[tag].speed;
-        this.blood = data[tag].blood;
-        this.initBlood = data[tag].blood;
-        this.enemyData = data[tag];
+        const cigData = ConfigMag.Ins.getEnemyData()[tag];
+        const useSkin = GameMag.Ins.trySkin || GameMag.Ins.useingData.skin;
+        const data = ConfigMag.Ins.getSkinData()[useSkin];
+        if (useSkin === 2) {
+            this.talent = data.talent;
+        } else if (useSkin === 6) {
+            this.talentToGun = data.talent;
+        }
+        this.speed = cigData.speed;
+        this.blood = cigData.blood;
+        this.initBlood = cigData.blood;
+        this.enemyData = cigData;
         this.taskType = GameMag.Ins.taskType;
         this.touchRole = false;
         this.roleCanMove = true;
@@ -225,17 +234,20 @@ export default class Enemy extends cc.Component {
     }
     hurted(hurt: number = null) {
         let self = this;
-        let info = null;
+        let normalPower = null;
         if (GameMag.Ins.isUseingMecha) {
-            info = ConfigMag.Ins.getMechaData()[GameMag.Ins.useingData.mecha];
+            const info = ConfigMag.Ins.getMechaData()[GameMag.Ins.useingData.mecha];
+            normalPower = info.power;
         } else {
             let gun = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;
-            info = ConfigMag.Ins.getGunData()[gun];
+            const info = ConfigMag.Ins.getGunData()[gun];
+            const talent = this.talentToGun != null ? this.talentToGun : 0;
+            normalPower = info.power + (info.power * talent);
         }
-        // console.log(info);
-        const power = info.power + (info.power * (GameMag.Ins.useAttackAssist / 100));//吃到增加攻击力的辅助道具
-        // console.log("对敌人的实际伤害", power);
-        this.blood -= hurt || power;
+        const power = normalPower + (normalPower * (GameMag.Ins.useAttackAssist / 100));//吃到增加攻击力的辅助道具
+        // console.log("对怪兽的实际伤害", power);
+        const talent = this.talent != null ? power * this.talent : 0;
+        this.blood -= hurt || (power + talent);
         let diff = this.blood / this.initBlood;
         // console.log(diff);
         if (diff >= 0.8) {

@@ -61,10 +61,10 @@ export default class UIScrollSelect extends cc.Component {
         this.currentIndex = 0;
 
         const useingData = GameMag.Ins.useingData;
-        if(type=="skin"){
+        if (type == "skin") {
             const useSkin = useingData.skin;
             this.scrollTo(useSkin, false);
-        }else{
+        } else {
             const useMecha = useingData.mecha;
             this.scrollTo(useMecha, false);
         }
@@ -135,25 +135,6 @@ export default class UIScrollSelect extends cc.Component {
         this.content.on(cc.Node.EventType.TOUCH_END, this._onTouchEnd, this);
         this.content.on(cc.Node.EventType.TOUCH_CANCEL, this._onTouchEnd, this);
     }
-    // updateTime: number = 0;
-    // _onTouchStart(event) {
-    // if (this._touchId != null && event.touch != this._touchId) {
-    //     return;
-    // }
-    // const nowTime = new Date().getTime();
-    // console.log((nowTime - this.updateTime));
-    // if (nowTime - this.updateTime < 1000) {
-    //     return;
-    // } else {
-    //     this.updateTime = new Date().getTime();
-    // }
-    // console.log("11111111");
-    // this.isTouching = true;
-    // this.hasTouchMove = false;
-    // this.isTestX = false;
-    // this._touchId = event.touch;
-    // this.dx = event.getStartLocation().x;
-    // }
     _onTouchMove(event) {
         if (this._touchId != null && event.touch != this._touchId) {
             return;

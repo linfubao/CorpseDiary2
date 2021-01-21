@@ -11,6 +11,8 @@ export default class AssistPage extends cc.Component {
 
     @property(cc.SpriteAtlas)
     homeAtlas: cc.SpriteAtlas = null;
+    @property(cc.SpriteAtlas)
+    shopAtlas: cc.SpriteAtlas = null;
     @property(cc.Node)
     assistBox: cc.Node = null;
     @property(cc.Node)
@@ -43,8 +45,10 @@ export default class AssistPage extends cc.Component {
         this.len = this.assistData.length;
         this.equipData = GameMag.Ins.useingData.assistEquip;
         this.equipLen = this.equipData.length;
-        this.loadItem();
-        this.loadEquipItem()
+        if (this.index < this.len) {
+            this.loadItem();
+        }
+        this.loadEquipItem();
         cc.director.on("freshAssistPageUI", this.freshAssistPageUI, this);
         cc.director.on("freshAssistEquipBtns", this.freshEquipBtns, this);
         this.buyAssistBtn.on(cc.Node.EventType.TOUCH_END, this.onBuyAssistBtn, this);
@@ -55,8 +59,8 @@ export default class AssistPage extends cc.Component {
         let self = this;
         ToolsMag.Ins.getHomeResource("prefab/shop/assistItem", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
-            // let sf = self.homeAtlas.getSpriteFrame("assistIcon_" + self.index);
-            node.getComponent("assistItem").init(self.index, self.assistData[self.index]);
+            let sf = self.shopAtlas.getSpriteFrame("assistIcon_" + self.index);
+            node.getComponent("assistItem").init(self.index, sf, self.assistData[self.index]);
             node.parent = self.assistBox;
             self.index++;
             if (self.index < self.len) {
@@ -70,8 +74,7 @@ export default class AssistPage extends cc.Component {
         ToolsMag.Ins.getHomeResource("prefab/shop/assistEquip", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
             let assistID = self.equipData[self.equipIndex];
-            let sf = self.homeAtlas.getSpriteFrame("assistIcon_" + assistID);
-            node.getComponent("assistEquip").init(assistID, self.equipIndex, sf);
+            node.getComponent("assistEquip").init(assistID, self.equipIndex);
             node.parent = self.equipBox;
             self.equipIndex++;
             if (self.equipIndex < self.equipLen) {
@@ -85,8 +88,8 @@ export default class AssistPage extends cc.Component {
         let localData = GameMag.Ins.assistData[assistID];
         this.getNumLab.string = String(localData.getNum);
         // console.log(data, localData);
-        this.assistName.spriteFrame = this.homeAtlas.getSpriteFrame("aname_" + assistID);
-        this.assistDesc.spriteFrame = this.homeAtlas.getSpriteFrame("assistDesc_" + assistID);
+        this.assistName.spriteFrame = this.shopAtlas.getSpriteFrame("assistName_" + assistID);
+        this.assistDesc.spriteFrame = this.shopAtlas.getSpriteFrame("assistDesc_" + assistID);
         this.freshEquipBtns();
     }
     /**
@@ -145,9 +148,12 @@ export default class AssistPage extends cc.Component {
         console.log("购买道具");
         AudioMag.getInstance().playSound("按钮音");
         let data = this.assistData[this.clickFlag];
-        let coin = GameMag.Ins.currency.coin;
-        if (coin < data.costNum) {
-            // DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["金币不足"]);
+        let currency = GameMag.Ins.currency;
+        if (data.buyType === 0 && (currency.coin < data.costNum)) {
+            cc.director.emit("shopCoinPage");
+            return;
+        }
+        if (data.buyType === 1 && (currency.diamond < data.costNum)) {
             cc.director.emit("shopCoinPage");
             return;
         }
@@ -156,6 +162,7 @@ export default class AssistPage extends cc.Component {
         let localData = GameMag.Ins.assistData[this.clickFlag];
         this.getNumLab.string = String(localData.getNum);
         cc.director.emit("updateCurrency");
+        this.onEquipBtn();
         this.freshEquipBtns();
     }
     //装备
@@ -163,16 +170,17 @@ export default class AssistPage extends cc.Component {
         console.log("装备");
         AudioMag.getInstance().playSound("按钮音");
         let equipData = GameMag.Ins.useingData.assistEquip;
-        let equipBoxArr = this.equipBox.children;
-        for (let i = 0; i < equipData.length; i++) {
-            let flag = this.searchEquipData();
-            if (equipData[i] < 0 && !flag) {
-                let itemShow = equipBoxArr[i].getChildByName("show");
-                itemShow.active = true;
-                // 找图片放到装备列表
-                let sf = this.homeAtlas.getSpriteFrame("assistIcon_" + this.clickFlag);
-                itemShow.getChildByName("icon").getComponent(cc.Sprite).spriteFrame = sf;
-                GameMag.Ins.updateUseingDataByAssistEquip(this.clickFlag, i);
+        let equipIndex = equipData.indexOf(-2);
+        let isEquip = equipData.indexOf(this.clickFlag);
+        if (isEquip >= 0) {//在装备列表上,只更新文字
+            cc.director.emit("upAssistEquip" + isEquip, this.clickFlag, false);
+        } else {
+            cc.director.emit("showAssistGetedIcon" + this.clickFlag);
+            if (equipIndex >= 0) { //有空位
+                GameMag.Ins.updateUseingDataByAssistEquip(this.clickFlag, equipIndex);
+                cc.director.emit("upAssistEquip" + equipIndex, this.clickFlag, true);
+            } else {
+                // console.log("已经没空位了");
             }
         }
         this.freshEquipBtns();
@@ -181,22 +189,11 @@ export default class AssistPage extends cc.Component {
         console.log("解除装备");
         AudioMag.getInstance().playSound("按钮音");
         let equipData = GameMag.Ins.useingData.assistEquip;
-        for (let i = 0; i < equipData.length; i++) {
-            if (equipData[i] == this.clickFlag) {
-                let showNode = this.equipBox.children[i].getChildByName("show");
-                let iconNode = showNode.getChildByName("icon");
-                cc.tween(iconNode)
-                    .to(0.2, { scale: 1.2 })
-                    .to(0.2, { scale: 0 })
-                    .call((node) => {
-                        showNode.active = false;
-                        node.scale = 1;
-                        GameMag.Ins.updateUseingDataByAssistEquip(-1, i);
-                        this.freshEquipBtns();
-                    })
-                    .start();
-                break;
-            }
+        let isEquip = equipData.indexOf(this.clickFlag);
+        if (isEquip >= 0) {//已经在装备列表上
+            cc.director.emit("downAssistEquip" + isEquip);
+            GameMag.Ins.updateUseingDataByAssistEquip(-2, isEquip);
+            this.freshEquipBtns();
         }
     }
 }

@@ -408,7 +408,14 @@ export default class ResultDialog extends cc.Component {
                 reward = Math.floor(missionCoin * 0.1);
                 break;
         }
-        GameMag.Ins.updateCurrency(0, missionCoin + reward);
+        let baseRward = missionCoin + reward;
+        console.log(missionCoin, reward, baseRward);
+        const useSkin = GameMag.Ins.trySkin || GameMag.Ins.useingData.skin;
+        const cigInfo = ConfigMag.Ins.getSkinData()[useSkin];
+        if (useSkin === 4) {
+            baseRward += baseRward * cigInfo.talent;
+        }
+        GameMag.Ins.updateCurrency(0, baseRward); //最终的金币奖励
         GameMag.Ins.updateCurrency(1, missionDialond);
         this.rewardLab.string = String(reward);
         cc.director.emit("updateCurrency");

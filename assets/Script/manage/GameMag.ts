@@ -455,9 +455,9 @@ export default class GameMag extends cc.Component {
         cc.sys.localStorage.setItem('skinData', JSON.stringify(this.skinData));
     }
     initUseingData() {
-        //skin:使用中的皮肤, gun:当前正在使用的枪, gunEquip:装备中的武器列表,assistEquip:装备中的辅助道具列表
+        //skin:使用中的皮肤, gun:当前正在使用的枪, gunEquip:装备中的武器列表,assistEquip:装备中的辅助道具列表,-2:空位
         let data = {
-            skin: 0, gun: 3, mecha: -1, gunEquip: [3, -1, -1, -1], assistEquip: [-1, -1, -1]
+            skin: 0, gun: 3, mecha: -1, gunEquip: [3, -2, -2, -2], assistEquip: [-2, -2, -2]
         };
         let init = cc.sys.localStorage.getItem('useingData');
         if (!init) {
@@ -531,7 +531,7 @@ export default class GameMag extends cc.Component {
     }
     /**
      * 更新装备中的辅助道具列表
-     * @param assistID 直接传入道具id,解除装备直接传-1
+     * @param assistID 直接传入道具id,解除装备直接传-2
      * @param index 所在的下标
      */
     updateUseingDataByAssistEquip(assistID, index) {
@@ -837,7 +837,8 @@ export default class GameMag extends cc.Component {
     //脚龙骨
     changeFoot(footDragon: dragonBones.ArmatureDisplay, cb: Function = null) {
         let legArr: string[] = ["forelegs", "hind_leg"];
-        let skinIndex = GameMag.Ins.trySkin || (this.shopShowSkin === null ? this.useingData.skin : this.shopShowSkin);
+        // let skinIndex = GameMag.Ins.trySkin || (this.shopShowSkin === null ? this.useingData.skin : this.shopShowSkin);
+        let skinIndex = 0;
         for (let i = 0, len = legArr.length; i < len; i++) {
             let robotArmature = footDragon.armature();
             let robotSlot = robotArmature.getSlot(legArr[i]);
@@ -846,7 +847,8 @@ export default class GameMag extends cc.Component {
         cb && cb();
     }
     loadDisplayIndex(strArr: string[], target: dragonBones.ArmatureDisplay, gunIndex: number = null) {
-        let skinIndex = GameMag.Ins.trySkin || (this.shopShowSkin === null ? this.useingData.skin : this.shopShowSkin);
+        // let skinIndex = GameMag.Ins.trySkin || (this.shopShowSkin === null ? this.useingData.skin : this.shopShowSkin);
+        let skinIndex = 0;
         for (let i = 0, len = strArr.length; i < len; i++) {
             let robotArmature = target.armature();
             let robotSlot = robotArmature.getSlot(strArr[i]);

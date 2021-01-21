@@ -11,6 +11,8 @@ export default class SkinPage extends cc.Component {
 
     @property(cc.SpriteAtlas)
     homeAtlas: cc.SpriteAtlas = null;
+    @property(cc.SpriteAtlas)
+    shopAtlas: cc.SpriteAtlas = null;
     @property(cc.Node)
     skinBox: cc.Node = null;
     @property(dragonBones.ArmatureDisplay)
@@ -54,7 +56,7 @@ export default class SkinPage extends cc.Component {
     @property(cc.Node)
     roleContent: cc.Node = null;
 
-    skinData: any[] = [];
+    skinCigData: any[] = [];
     clickFlag: number = null;//当前点击的是哪个皮肤,代表skinID
     index: number = 0;
     len: number = 0;
@@ -73,15 +75,14 @@ export default class SkinPage extends cc.Component {
     armorUpCount: number = 0;
 
     onEnable() {
-        this.roleContent.getComponent("UIScrollSelect").init();
+        this.roleContent.getComponent("UIScrollSelect").init("skin");
         this.skillConfig = GameMag.Ins.skillConfig;
-        this.skinData = ConfigMag.Ins.getSkinData();
-        this.len = this.skinData.length;
+        this.skinCigData = ConfigMag.Ins.getSkinData();
+        this.len = this.skinCigData.length;
         if (this.index < this.len) {
             this.loadItem();
         } else {
-            const useSkin = GameMag.Ins.useingData.skin;
-            const data = ConfigMag.Ins.getSkinData()[useSkin];
+            const data = this.skinCigData[this.clickFlag];
             this.freshSkinPageUI(data);
         }
         this.freshOption();
@@ -91,8 +92,8 @@ export default class SkinPage extends cc.Component {
         let self = this;
         ToolsMag.Ins.getHomeResource("prefab/shop/skinItem", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
-            let sp = self.homeAtlas.getSpriteFrame("skinIcon_" + self.index);
-            node.getComponent("skinItem").init(self.index, sp);
+            let sf = self.shopAtlas.getSpriteFrame("skinIcon_" + self.index);
+            node.getComponent("skinItem").init(self.index, sf);
             node.parent = self.skinBox;
             self.index++;
             if (self.index < self.len) {
@@ -130,8 +131,8 @@ export default class SkinPage extends cc.Component {
         //     return;
         // }
         this.clickFlag = data.skinID;
-        this.skinName.spriteFrame = this.homeAtlas.getSpriteFrame("sname_" + data.skinID);
-        this.skinDesc.spriteFrame = this.homeAtlas.getSpriteFrame("skinDesc_" + data.skinID);
+        this.skinName.spriteFrame = this.shopAtlas.getSpriteFrame("skinName_" + data.skinID);
+        this.skinDesc.spriteFrame = this.shopAtlas.getSpriteFrame("skinDesc_" + data.skinID);
         this.showRole(data);
         this.freshBtns();
         this.loadSkillBlock(data);
@@ -304,7 +305,7 @@ export default class SkinPage extends cc.Component {
             } else {
                 this.equipBtn.active = true;
             }
-            const cigData = ConfigMag.Ins.getSkinData()[this.clickFlag];
+            const cigData = this.skinCigData[this.clickFlag];
             const upMax = cigData.upMax;
             let isMax = true;
             if (localData.bloodLv < upMax || localData.speedLv < upMax || localData.armorLv < upMax) {
@@ -322,20 +323,16 @@ export default class SkinPage extends cc.Component {
     onBuy() {
         AudioMag.getInstance().playSound("按钮音");
         let currency = GameMag.Ins.currency;
-        let data = ConfigMag.Ins.getSkinData()[this.clickFlag];
+        let data = this.skinCigData[this.clickFlag];
         // console.log(data);
-        if (data.buyType == 0) {
-            if (currency.coin < data.costNum) {
-                // DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["金币不足"]);
-                cc.director.emit("shopCoinPage");
-                return; //钱不够买
-            }
-        } else {
-            if (currency.diamond < data.costNum) {
-                // DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["钻石不足"]);
-                cc.director.emit("shopCoinPage");
-                return; //钱不够买
-            }
+        if (data.buyType === 0 && (currency.coin < data.costNum)) {
+            // DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["金币不足"]);
+            cc.director.emit("shopCoinPage");
+            return;
+        }
+        if (data.buyType === 1 && (currency.diamond < data.costNum)) {
+            cc.director.emit("shopCoinPage");
+            return;
         }
         GameMag.Ins.updateSkinData(this.clickFlag);
         GameMag.Ins.updateCurrency(data.buyType, -data.costNum);

@@ -15,6 +15,8 @@ export default class GameMain extends cc.Component {
     @property(cc.SpriteAtlas)
     homeAtlas: cc.SpriteAtlas = null;
     @property(cc.SpriteAtlas)
+    shopAtlas: cc.SpriteAtlas = null;
+    @property(cc.SpriteAtlas)
     gameAtlas: cc.SpriteAtlas = null;
     @property(cc.Node)
     roleCamera: cc.Node = null;
@@ -181,18 +183,21 @@ export default class GameMain extends cc.Component {
         GameMag.Ins.gameKillNum = 0;
         GameMag.Ins.roleBlood = 1;
         GameMag.Ins.timeStart = new Date().getTime();
-        this.babyMoveSpeed = 5 * 40;
+        this.babyMoveSpeed = 200;
         let useSkin = GameMag.Ins.trySkin || GameMag.Ins.useingData.skin;
-        let info = ConfigMag.Ins.getSkinData()[useSkin];
-        if (info) {
-            this.moveSpeed = info.speed * 50;
+        const info = GameMag.Ins.skinData[useSkin];
+        const cigInfo = ConfigMag.Ins.getSkinData()[useSkin];
+        let baseSpeed = info.speed * 80;
+        if (useSkin === 1) {
+            baseSpeed += baseSpeed * cigInfo.talent;
         }
+        this.moveSpeed = baseSpeed;
     }
     initUI() {
         this.roleSkin = this.role.getChildByName("body");
         this.roleFoot = this.role.getChildByName("foot");
         let useingData = GameMag.Ins.useingData;
-        this.headImg.spriteFrame = this.homeAtlas.getSpriteFrame("skin_" + useingData.skin);
+        this.headImg.spriteFrame = this.shopAtlas.getSpriteFrame("skinIcon_" + useingData.skin);
         this.initPoos();
         this.initTask();
         this.initBackground();
@@ -232,6 +237,7 @@ export default class GameMain extends cc.Component {
         cc.director.on("loadEnemy", this.loadEnemy, this); //道具箱子随机出怪
         cc.director.on("showRoleBlood", this.showRoleBlood, this); //显示主角(或baby)被攻击时屏幕左右两边的血
         cc.director.on("showGameKey", this.showGameKey, this); //钥匙模式随机出现的钥匙
+        cc.director.on("hideMecha", this.hideMecha, this); //机甲消失
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
         this.leftBtn.on(cc.Node.EventType.TOUCH_START, this.onMoveLeftStart, this);
@@ -584,9 +590,16 @@ export default class GameMain extends cc.Component {
         ToolsMag.Ins.getGameResource("prefab/gameAssistItem", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
             let assistID = self.assistList[self.assistItemIndex];
-            let sp = self.homeAtlas.getSpriteFrame("assistIcon_" + assistID);
+            if (assistID < 0) {
+                self.assistItemIndex++;
+                if (self.assistItemIndex < self.assistItemLen) {
+                    self.loadAssistItem();
+                }
+                return;
+            }
+            let sf = self.shopAtlas.getSpriteFrame("assistIcon_" + assistID);
             node.parent = self.assistBox;
-            node.getComponent("gameAssistItem").init(assistID, self.assistItemIndex, sp);
+            node.getComponent("gameAssistItem").init(assistID, self.assistItemIndex, sf);
             self.assistItemIndex++;
             if (self.assistItemIndex < self.assistItemLen) {
                 self.loadAssistItem();
@@ -601,7 +614,7 @@ export default class GameMain extends cc.Component {
             mechaBox.active = false;
             return;
         }
-        mechaBox.getChildByName("skin").getComponent(cc.Sprite).spriteFrame = this.homeAtlas.getSpriteFrame("mecha_" + id);
+        mechaBox.getChildByName("skin").getComponent(cc.Sprite).spriteFrame = this.shopAtlas.getSpriteFrame("mechaIcon_" + id);
         let mechaData = GameMag.Ins.mechaData;
         for (let index = 0; index < mechaData.length; index++) {
             const element = mechaData[index];
@@ -921,6 +934,7 @@ export default class GameMain extends cc.Component {
                     self.showBlastSmoke();
                     SdkManager.instance.vibrateShort();
                     GameMag.Ins.isUseingMecha = true;
+                    cc.director.emit("useingMecha", true);
                     self.roleSkin.active = false;
                     self.roleFoot.active = false;
                     self.mechaBox.getChildByName("buffer").active = true;
@@ -942,27 +956,35 @@ export default class GameMain extends cc.Component {
     mechaShowTimeCb() {
         this.mecheCountTime--;
         // console.log(this.mecheCountTime);
-        this.mechaBox.getChildByName("buffer").getComponent(cc.ProgressBar).progress -= 1 / this.mecheTime;
+        const progress = this.mechaBox.getChildByName("buffer").getComponent(cc.ProgressBar);
+        progress.progress -= 1 / this.mecheTime;
         if (this.mecheCountTime <= 0) { //机甲消失,显示主角
-            this.showBlastSmoke();
-            GameMag.Ins.isUseingMecha = false;
-            this.mechaBox.getChildByName("buffer").active = false;
-            this.mecha.getChildByName("test").active = true;
-            this.unschedule(this.mechaShowTimeCb);
-            this.roleSkin.active = true;
-            this.roleFoot.active = true;
-            this.scheduleOnce(() => {
-                this.mecha.removeFromParent();
-                this.mecha = null;
-                this.mecheCountTime = null;
-                this.mecheSpeed = null;
-                if (this.isMoving()) {
-                    this.roleWalk()
-                } else {
-                    this.roleStay();
-                }
-            }, 0);
+            this.hideMecha();
         }
+    }
+    /**
+     * 机甲消失
+     */
+    hideMecha() {
+        this.showBlastSmoke();
+        GameMag.Ins.isUseingMecha = false;
+        cc.director.emit("useingMecha", false);
+        this.mechaBox.getChildByName("buffer").active = false;
+        this.mecha.getChildByName("test").active = true;
+        this.unschedule(this.mechaShowTimeCb);
+        this.roleSkin.active = true;
+        this.roleFoot.active = true;
+        this.scheduleOnce(() => {
+            this.mecha.removeFromParent();
+            this.mecha = null;
+            this.mecheCountTime = null;
+            this.mecheSpeed = null;
+            if (this.isMoving()) {
+                this.roleWalk()
+            } else {
+                this.roleStay();
+            }
+        }, 0);
     }
     //切换机甲龙骨
     switchMechaAction(name, times, cb: Function = null) {
@@ -1249,10 +1271,10 @@ export default class GameMain extends cc.Component {
     /**
      * 吃了或使用辅助道具
      * @param type 1:增加防御status_1; 2:增加攻击status_2; 3:增加速度status_3
-     * @param assistNum  增加数值
+     * @param effectNum  增加数值
      * @param assistTime  持续时间
      */
-    useAssist(type, assistNum, assistTime) {
+    useAssist(type, effectNum, assistTime) {
         this.showShine();
         const target = this.assistStatus.node;
         target.active = true;
@@ -1263,9 +1285,9 @@ export default class GameMain extends cc.Component {
         }
         this.assistStatus.spriteFrame = this.gameAtlas.getSpriteFrame("status_" + type);
         if (type == 2) {
-            GameMag.Ins.useAttackAssist = assistNum;
+            GameMag.Ins.useAttackAssist = effectNum;
         } else if (type == 3) {
-            this.assistSpeed = assistNum;
+            this.assistSpeed = effectNum;
         }
         let action = cc.sequence(
             cc.scaleTo(0.3, 1.1),

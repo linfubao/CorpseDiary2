@@ -11,6 +11,8 @@ export default class MechaPage extends cc.Component {
 
     @property(cc.SpriteAtlas)
     homeAtlas: cc.SpriteAtlas = null;
+    @property(cc.SpriteAtlas)
+    shopAtlas: cc.SpriteAtlas = null;
     @property(cc.Node)
     costBox: cc.Node = null;
     @property(cc.Node)
@@ -44,7 +46,7 @@ export default class MechaPage extends cc.Component {
     bulletShellsPre: cc.Prefab = null;
 
     mecha: cc.Node = null;
-    mechaData: any[] = [];
+    mechaCigData: any[] = [];
     len: number = 0;
     index: number = 0;
     clickFlag: number = null;//当前点击的是哪个武器,代表gunID
@@ -58,16 +60,14 @@ export default class MechaPage extends cc.Component {
     speedMaxCount: number = 0;
 
     onEnable() {
-        this.mechaContent.getComponent("UIScrollSelect").init();
+        this.mechaContent.getComponent("UIScrollSelect").init("mecha");
         this.skillConfig = GameMag.Ins.skillConfig;
-        this.mechaData = ConfigMag.Ins.getMechaData();
-        this.len = this.mechaData.length;
+        this.mechaCigData = ConfigMag.Ins.getMechaData();
+        this.len = this.mechaCigData.length;
         if (this.index < this.len) {
             this.loadItem();
         } else {
-            const useMecha = GameMag.Ins.useingData.mecha;
-            const data = ConfigMag.Ins.getMechaData()[useMecha];
-            this.freshMechaPageUI(data);
+            this.freshMechaPageUI(this.mechaCigData[this.clickFlag]);
         }
         cc.director.on("freshMechaPageUI", this.freshMechaPageUI, this);
         this.buyGunBtn.on(cc.Node.EventType.TOUCH_END, this.onBuyGunBtn, this);
@@ -78,7 +78,7 @@ export default class MechaPage extends cc.Component {
         let self = this;
         ToolsMag.Ins.getHomeResource("prefab/shop/mechaItem", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
-            let sf = self.homeAtlas.getSpriteFrame("mecha_" + self.index);
+            let sf = self.shopAtlas.getSpriteFrame("mechaIcon_" + self.index);
             let data = GameMag.Ins.mechaData;
             node.getComponent("mechaItem").init(data[self.index], self.index, sf);
             node.parent = self.mechaBox;
@@ -95,20 +95,15 @@ export default class MechaPage extends cc.Component {
     //购买机甲
     onBuyGunBtn() {
         AudioMag.getInstance().playSound("按钮音");
-        let data = this.mechaData[this.clickFlag];
+        let data = this.mechaCigData[this.clickFlag];
         let currency = GameMag.Ins.currency;
-        if (data.buyType == 0) {
-            if (currency.coin < data.costNum) {
-                // DialogMag.Ins.show(DialogPath.MessageDialog,DialogScript.MessageDialog,["金币不足"]);
-                cc.director.emit("shopCoinPage");
-                return; //钱不够买
-            }
-        } else {
-            if (currency.diamond < data.costNum) {
-                // DialogMag.Ins.show(DialogPath.MessageDialog,DialogScript.MessageDialog,["钻石不足"]);
-                cc.director.emit("shopCoinPage");
-                return; //钱不够买
-            }
+        if (data.buyType === 0 && (currency.coin < data.costNum)) {
+            cc.director.emit("shopCoinPage");
+            return;
+        }
+        if (data.buyType === 1 && (currency.diamond < data.costNum)) {
+            cc.director.emit("shopCoinPage");
+            return;
         }
         GameMag.Ins.updateCurrency(data.buyType, -data.costNum);
         GameMag.Ins.updateMechaData(this.clickFlag, 1);
@@ -136,8 +131,8 @@ export default class MechaPage extends cc.Component {
     freshMechaPageUI(data) {
         // if (this.clickFlag == data.mechaID) return;
         this.clickFlag = data.mechaID;
-        this.mechaName.spriteFrame = this.homeAtlas.getSpriteFrame("mname_" + data.mechaID);
-        this.mechaDesc.spriteFrame = this.homeAtlas.getSpriteFrame("mechaDesc_" + data.mechaID);
+        this.mechaName.spriteFrame = this.shopAtlas.getSpriteFrame("mechaName_" + data.mechaID);
+        this.mechaDesc.spriteFrame = this.shopAtlas.getSpriteFrame("mechaDesc_" + data.mechaID);
         // this.freshMechaBone(data);
         this.freshBtns();
         this.freshCostBox(data);
@@ -226,20 +221,19 @@ export default class MechaPage extends cc.Component {
     //实时更新按钮:购买/装备/解除
     freshBtns() {
         let localData = GameMag.Ins.mechaData[this.clickFlag];
-        let useringMecha = GameMag.Ins.useingData.mecha;
-        // console.log(data, localData);
-        if (useringMecha == localData.mechaID) {
-            this.equipBtn.active = false;
-            this.unequipBtn.active = true;
-        } else {
-            this.equipBtn.active = true;
-            this.unequipBtn.active = false;
-        }
-        if (localData.getNum == 0) {
+        let useingMecha = GameMag.Ins.useingData.mecha;
+        // console.log(localData);
+        if (localData.getNum < 1) {
             this.equipBtn.active = false;
             this.unequipBtn.active = false;
         } else {
-            this.buyGunBtn.active = true;
+            if (useingMecha == localData.mechaID) {
+                this.equipBtn.active = false;
+                this.unequipBtn.active = true;
+            } else {
+                this.equipBtn.active = true;
+                this.unequipBtn.active = false;
+            }
         }
     }
     freshCostBox(data) {
