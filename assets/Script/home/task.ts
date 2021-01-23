@@ -22,7 +22,7 @@ export default class Task extends cc.Component {
         );
         this.node.scale = 0;
         cc.tween(this.node)
-            .to(0.4, { scale: 1.3 })
+            .to(0.3, { scale: 1 })
             .call((node) => {
                 cc.tween(node)
                     .then(action)

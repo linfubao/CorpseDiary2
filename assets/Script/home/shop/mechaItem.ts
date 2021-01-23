@@ -26,21 +26,13 @@ export default class MechaItem extends cc.Component {
         this.icon.spriteFrame = sf;
         this.getNum.string = String("x" + data.getNum);
         let useringMecha = GameMag.Ins.useingData.mecha;
+        let arr = ConfigMag.Ins.getMechaData();
         if (data.getNum > 0 && index == useringMecha) {
             this.showScale(this.actives, 0.1, 1.5);
             this.showScale(this.equipIcon, 0.25, 2.5);//当前使用的是哪个皮肤,就显示打钩
             this.showIcon();
-            let arr = ConfigMag.Ins.getMechaData();
             cc.director.emit("freshMechaPageUI", arr[index]);
         }
-        if (index == 0) { //每次进来默认高亮第一个
-            this.showScale(this.actives, 0.1, 1.5);
-            let arr = ConfigMag.Ins.getMechaData();
-            cc.director.emit("freshMechaPageUI", arr[index]);
-        } else {
-            this.actives.active = false;
-        }
-
         cc.director.on("freshMechaItemUI", this.freshMechaItemUI, this);
         cc.director.on("freshMechaItemActive", this.showItemActive, this);
         cc.director.on("freshEquipIcon", this.freshEquipIcon, this);

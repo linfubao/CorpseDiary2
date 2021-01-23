@@ -16,8 +16,6 @@ export default class MechaPage extends cc.Component {
     @property(cc.Node)
     costBox: cc.Node = null;
     @property(cc.Node)
-    mechaParent: cc.Node = null;
-    @property(cc.Node)
     mechaBox: cc.Node = null;
     @property(cc.Sprite)
     mechaName: cc.Sprite = null;
@@ -50,6 +48,8 @@ export default class MechaPage extends cc.Component {
     len: number = 0;
     index: number = 0;
     clickFlag: number = null;//当前点击的是哪个武器,代表gunID
+    showMechaIndex: number = null;
+    shellsPool: cc.NodePool = null;
 
     skillConfig: number[] = [];
     bloodCount: number = 0;
@@ -59,6 +59,13 @@ export default class MechaPage extends cc.Component {
     powerMaxCount: number = 0;
     speedMaxCount: number = 0;
 
+    onLoad() {
+        this.shellsPool = new cc.NodePool();
+        for (let i = 0; i < 4; i++) {
+            let node = cc.instantiate(this.bulletShellsPre);
+            this.shellsPool.put(node);
+        }
+    }
     onEnable() {
         this.mechaContent.getComponent("UIScrollSelect").init("mecha");
         this.skillConfig = GameMag.Ins.skillConfig;
@@ -85,6 +92,24 @@ export default class MechaPage extends cc.Component {
             self.index++;
             if (self.index < self.len) {
                 self.loadItem();
+            } else {
+                let flag = false;
+                let flag2 = false;
+                const useringMecha = GameMag.Ins.useingData.mecha;
+                for (let i = 0; i < data.length; i++) {
+                    if (data[i].getNum > 0) {
+                        flag = true;
+                        break;
+                    }
+                }
+                for (let i = 0; i < data.length; i++) {
+                    if (useringMecha == data[i]) {
+                        flag2 = true;
+                    }
+                }
+                if (!flag || !flag2) {
+                    cc.director.emit("freshMechaItemActive", 0);
+                }
             }
         })
     }
@@ -118,6 +143,7 @@ export default class MechaPage extends cc.Component {
         this.equipBtn.active = false;
         this.unequipBtn.active = true;
     }
+    //解除装备
     onUnequipBtn() {
         AudioMag.getInstance().playSound("按钮音");
         cc.director.emit("freshEquipIcon");
@@ -133,7 +159,7 @@ export default class MechaPage extends cc.Component {
         this.clickFlag = data.mechaID;
         this.mechaName.spriteFrame = this.shopAtlas.getSpriteFrame("mechaName_" + data.mechaID);
         this.mechaDesc.spriteFrame = this.shopAtlas.getSpriteFrame("mechaDesc_" + data.mechaID);
-        // this.freshMechaBone(data);
+        this.freshMechaBone(data);
         this.freshBtns();
         this.freshCostBox(data);
         this.loadSkillBlock();
@@ -143,28 +169,46 @@ export default class MechaPage extends cc.Component {
      */
     count: number = 0;
     freshMechaBone(data) {
+        this.unschedule(this.armorMechaSche);
+        this.unschedule(this.armorMechaSche1);
+        this.unschedule(this.robotMechaSche);
+        this.mecha = this.mechaContent.children[this.clickFlag];
+        this.switchMechaAction(this.mecha, mechaAnimate.Stay, 0);
+        if (this.clickFlag == 0 || this.clickFlag == 1 || this.clickFlag == 4) {
+            this.count = 0;
+            this.schedule(this.armorMechaSche, 3);
+        } else if (this.clickFlag == 2 || this.clickFlag == 3 || this.clickFlag == 5) {
+            this.schedule(this.robotMechaSche, 4);
+        } else {
+            this.count = 0;
+            this.schedule(this.armorMechaSche, 3);
+        }
+
+        // const mechaID = data.mechaID;
+        // ToolsMag.Ins.getHomeResource("prefab/mecha/mecha" + mechaID, function (prefab: cc.Prefab) {
+        //     let node = cc.instantiate(prefab);
+        //     node.parent = self.mechaParent;
+        //     self.mecha = node;
+        //     node.y = -140;
+        //     node.scale = 1.4;
+        //     self.switchMechaAction(node, mechaAnimate.Stay, 0);
+        //     self.count = 0;
+        //     self.schedule(self.timer1, 3);
+        // });
+    }
+    robotMechaSche() {
         let self = this;
-        this.unschedule(this.timer1);
-        this.mechaParent.removeAllChildren();
-        const mechaID = data.mechaID;
-        ToolsMag.Ins.getHomeResource("prefab/mecha/mecha" + mechaID, function (prefab: cc.Prefab) {
-            let node = cc.instantiate(prefab);
-            node.parent = self.mechaParent;
-            self.mecha = node;
-            node.y = -140;
-            node.scale = 1.4;
-            self.switchMechaAction(node, mechaAnimate.Stay, 0);
-            self.count = 0;
-            self.schedule(self.timer1, 3);
+        this.switchMechaAction(this.mecha, mechaAnimate.Fire, 1, function () {
+            self.switchMechaAction(self.mecha, mechaAnimate.Stay, 0);
         });
     }
-    timer1() {
-        this.schedule(this.timer2, 0.2, 3);
+    armorMechaSche() {
+        this.schedule(this.armorMechaSche1, 0.2, 3);
     }
-    timer2() {
+    armorMechaSche1() {
         this.count++;
         this.switchMechaAction(this.mecha, mechaAnimate.Fire, 1);
-        this.showFireShells(this.mecha);
+        this.showFireShells();
         if (this.count == 4) {
             this.count = 0;
             this.switchMechaAction(this.mecha, mechaAnimate.Stay, 0);
@@ -173,49 +217,67 @@ export default class MechaPage extends cc.Component {
     /**
      * 显示蛋壳
      */
-    showFireShells(parentNode) {
-        let shellsNode = cc.instantiate(this.bulletShellsPre);
-        switch (this.clickFlag) {
-            case 0:
-                AudioMag.getInstance().playSound("机甲");
-                shellsNode.children[0].active = true;
-                shellsNode.setPosition(-110, 120);
-                break;
-            case 1:
-                AudioMag.getInstance().playSound("机甲");
-                shellsNode.children[0].active = true;
-                shellsNode.setPosition(10, 160);
-                break;
-            case 2:
-                AudioMag.getInstance().playSound("RPG");
-                shellsNode.children[2].active = true;
-                shellsNode.setPosition(-120, 105);
-                break;
-            default:
-                break;
+    showFireShells() {
+        let shellsNode = null;
+        if (this.shellsPool.size() > 0) {
+            shellsNode = this.shellsPool.get();
+        } else {
+            shellsNode = cc.instantiate(this.bulletShellsPre);
         }
+        if (this.clickFlag === 0) {
+            AudioMag.getInstance().playSound("机甲");
+            shellsNode.children[0].active = true;
+        } else {
+            AudioMag.getInstance().playSound("RPG");
+            shellsNode.children[2].active = true;
+        }
+        shellsNode.setPosition(this.mecha.getChildByName("shellsPos").position);
         shellsNode.getComponent(cc.RigidBody).linearVelocity = cc.v2(-400, 350);
-        shellsNode.parent = parentNode;
+        shellsNode.parent = this.mecha;
         let a = Math.random() > 0.5 ? 1 : -1;
         let agnle = 150 + Math.random() * 50;
+        shellsNode.scale = 0.8;
         shellsNode.angle = agnle;
+        shellsNode.stopAllActions();
         cc.tween(shellsNode)
             .by(0.3, { angle: agnle * a })
             .repeat(3)
             .delay(1.5)
             .call(() => {
-                shellsNode.destroy();
+                this.shellsPool.put(shellsNode);
             })
             .start();
     }
     //切换机甲龙骨
-    switchMechaAction(mecha, action, times) {
+    switchMechaAction(mecha, action, times, cb = null) {
+        // console.log(this.clickFlag);
         let body = mecha.getChildByName("body");
-        let lowNode = body.getChildByName("low");
-        let inNode = body.getChildByName("in");//身体
-        let upNode = body.getChildByName("up");
+        if (this.clickFlag == 2 || this.clickFlag == 3 || this.clickFlag == 5) {
+            let part1 = body.getChildByName("part1");
+            let part2 = body.getChildByName("part2");
+            let part3 = body.getChildByName("part3");
+            let part4 = body.getChildByName("part4");
+            let part5 = body.getChildByName("part5");
+            ToolsMag.Ins.playDragonBone(part1, action, times, null);
+            ToolsMag.Ins.playDragonBone(part2, action, times, null);
+            ToolsMag.Ins.playDragonBone(part3, action, times, null);
+            ToolsMag.Ins.playDragonBone(part4, action, times, null);
+            ToolsMag.Ins.playDragonBone(part5, action, times, function () {
+                cb && cb();
+            });
+            return;
+        }
+        let lowNode = null, inNode = null, upNode = null;
+        if (this.clickFlag == 0 || this.clickFlag == 1 || this.clickFlag == 4) {
+            lowNode = body.getChildByName("low");
+            inNode = body.getChildByName("in");//身体
+            upNode = body.getChildByName("up");
+            ToolsMag.Ins.playDragonBone(inNode, action, times, null);
+        } else {
+            lowNode = body.getChildByName("low");
+            upNode = body.getChildByName("up");
+        }
         ToolsMag.Ins.playDragonBone(lowNode, action, times, null);
-        ToolsMag.Ins.playDragonBone(inNode, action, times, null);
         ToolsMag.Ins.playDragonBone(upNode, action, times, null);
     }
     //实时更新按钮:购买/装备/解除

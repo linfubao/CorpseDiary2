@@ -1,8 +1,8 @@
 {
-  "appid": "wx55c29ee86c42c2e6",
+  "appid": "wxab11a19fbf40a4b1",
   "orientation": "landscape",
   "separate_engine": false,
-  "REMOTE_SERVER_ROOT": "https://tygame-1302809674.cos.ap-guangzhou.myqcloud.com/CorpseUpload",
+  "REMOTE_SERVER_ROOT": "https://tygame-1302809674.file.myqcloud.com/Corpse2",
   "subContext": "",
   "startSceneAssetBundle": true
 }

@@ -13,12 +13,16 @@ export default class ResultDialog extends cc.Component {
 
     @property(cc.SpriteAtlas)
     homeAtlas: cc.SpriteAtlas = null;
+    @property(cc.SpriteAtlas)
+    shopAtlas: cc.SpriteAtlas = null;
     @property(cc.Node)
     failNode: cc.Node = null;
     @property(cc.Node)
     adviseNode: cc.Node = null;
     @property(cc.Node)
     popupNode: cc.Node = null;
+    @property(cc.Label)
+    popupClockLab: cc.Label = null;//倒计时
     @property(cc.Label)
     popupText: cc.Label = null;
     @property(cc.Node)
@@ -59,6 +63,11 @@ export default class ResultDialog extends cc.Component {
     missionCoinLab: cc.Label = null;
     @property({ type: cc.Label, tooltip: "任务奖励-钻石" })
     missionDiamondLab: cc.Label = null;
+    @property({ type: cc.Node, tooltip: "" })
+    boxIcon: cc.Node = null;
+    @property({ type: cc.Sprite, tooltip: "挑战成功时奖励的道具图标" })
+    giftIcon: cc.Sprite = null;
+
     @property({ type: cc.Sprite, tooltip: "第1把试用武器图片" })
     iconImage1: cc.Sprite = null;
     @property({ type: cc.Sprite, tooltip: "第2把试用武器图片" })
@@ -86,6 +95,7 @@ export default class ResultDialog extends cc.Component {
     speed: number = 1; //轮播速度,此值越大越慢
     bid: string = "5fdc8a6bd1b5c92d77836336";
     getBoxData: any = null;
+    popupClock: number = 6;
 
     onInit(status) {
         // const lv = GameMag.Ins.level;
@@ -114,6 +124,14 @@ export default class ResultDialog extends cc.Component {
             return;
         }
         this.popupNode.active = true;
+        this.popupClockLab.string = String(this.popupClock);
+        this.schedule(() => {
+            this.popupClock--;
+            if (this.popupClock === 0) {
+                this.onCancel();
+            }
+            this.popupClockLab.string = String(this.popupClock);
+        }, 1, this.popupClock)
     }
     showMoreGame() {
         // this.getBoxData = [1, 1, 1];
@@ -409,7 +427,7 @@ export default class ResultDialog extends cc.Component {
                 break;
         }
         let baseRward = missionCoin + reward;
-        console.log(missionCoin, reward, baseRward);
+        // console.log(missionCoin, reward, baseRward);
         const useSkin = GameMag.Ins.trySkin || GameMag.Ins.useingData.skin;
         const cigInfo = ConfigMag.Ins.getSkinData()[useSkin];
         if (useSkin === 4) {
@@ -422,21 +440,38 @@ export default class ResultDialog extends cc.Component {
     }
     showGrade() {
         let flag = this.checkGrade();
-        let gradeBg = flag == 3 ? this.failCircle : this.successCircle;
-        gradeBg.active = true;
-        cc.tween(gradeBg)
-            .to(0.2, { scale: 0.8 })
-            .to(0.07, { scale: 1.2 })
-            .to(0.07, { scale: 1 })
-            .repeatForever(cc.tween().by(5, { angle: -360 }))
-            .start();
+        // let gradeBg = flag == 3 ? this.failCircle : this.successCircle;
+        // gradeBg.active = true;
+        // cc.tween(gradeBg)
+        //     .to(0.2, { scale: 0.8 })
+        //     .to(0.07, { scale: 1.2 })
+        //     .to(0.07, { scale: 1 })
+        //     .repeatForever(cc.tween().by(5, { angle: -360 }))
+        //     .start();
         let node = this.gradeBox.children[flag];
         node.active = true;
         cc.tween(this.gradeBox)
             .to(0.2, { scale: 0.8 })
             .to(0.07, { scale: 1.2 })
             .to(0.07, { scale: 1 })
+            .delay(0.2)
+            .call(() => {
+                this.showExtraGift();
+            })
             .start();
+    }
+    showExtraGift() {
+        this.boxIcon.active = false;
+        const assistData = GameMag.Ins.assistData;
+        const index = Math.floor(Math.random() * assistData.length);
+        this.giftIcon.spriteFrame = this.shopAtlas.getSpriteFrame("assistIcon_" + index);
+        this.giftIcon.node.active = true;
+        cc.tween(this.giftIcon.node)
+            .to(0.2, { scale: 0.5 })
+            .to(0.07, { scale: 0.6 })
+            .to(0.07, { scale: 0.5 })
+            .start();
+        GameMag.Ins.updateAssistData(index, 1);
     }
     //判断评级
     checkGrade() {

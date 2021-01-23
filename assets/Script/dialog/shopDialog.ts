@@ -21,7 +21,7 @@ export default class ShopDialog extends cc.Component {
     lastIndex: number = null;
     nowIndex: number = null;
     initPs: cc.Vec3[] = [];
-    moveDiff: cc.Vec2 = cc.v2(30, 15); //向下移动的距离
+    moveDiff: cc.Vec2 = cc.v2(20, 15); //向下移动的距离
 
     onInit(index) {
         this.initUI(index);

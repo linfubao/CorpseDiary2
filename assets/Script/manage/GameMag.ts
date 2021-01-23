@@ -98,7 +98,7 @@ export default class GameMag extends cc.Component {
     useingGuns: any[] = [null, null, null, null]; //带进游戏的四把枪,游戏内的显示顺序以商店装备的顺序为准
     useingAssist: any[] = [null, null, null]; //带进游戏的三个辅助道具
     isUseingMecha: boolean = false; //是否正在使用机甲
-    skillConfig: number[] = [0.06, 1.11, 0.05];
+    skillConfig: number[] = [0.04, 1.11, 0.04];
     shopShowGun: number = null;
     shopShowSkin: number = null;
     scrollToSkin: number = 0; //建议使用那里点击显示商店界面
@@ -117,6 +117,10 @@ export default class GameMag extends cc.Component {
     showJumpToGame: boolean = false; //是否显示跳转其他游戏的弹窗
     doubleCoinTime: boolean = false; //双倍金币奖励时间
     doubleDiamondTime: boolean = false;//双倍钻石奖励时间
+    nowGunIndex: number = null; //现在这把武器
+    lastGunIndex: number = null;//上一把武器
+    bulletWarnNum: number = 30; //小于30显示子弹不足预警
+
     /**
      * 仅用来记录当前关卡的击杀数
      */
@@ -562,7 +566,7 @@ export default class GameMag extends cc.Component {
             if (item.gunID == 3) {//第一把默认枪
                 geted = true;
             } else {
-                geted = false;
+                geted = true;
             }
             data.push({ gunID: item.gunID, geted: geted, bulletNum: num, lockStatus: item.lockStatus });//bulletNum: 剩余子弹
         })
@@ -1116,6 +1120,6 @@ export default class GameMag extends cc.Component {
  * 16. 长舌怪的区域
  * 18. 冰子弹
  * 19. 防御区域(旋涡)
- * 20. 要护送的小弟,我叫他baby
+ * 20. 要护送的小弟身体,我叫他baby
  * 21. 游戏中出现的钥匙(钥匙任务的钥匙)
  */

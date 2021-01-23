@@ -132,7 +132,7 @@ export default class SkinPage extends cc.Component {
         // }
         this.clickFlag = data.skinID;
         this.skinName.spriteFrame = this.shopAtlas.getSpriteFrame("skinName_" + data.skinID);
-        this.skinDesc.spriteFrame = this.shopAtlas.getSpriteFrame("skinDesc_" + data.skinID);
+        this.skinDesc.spriteFrame = this.shopAtlas.getSpriteFrame("skinTalent_" + data.skinID);
         this.showRole(data);
         this.freshBtns();
         this.loadSkillBlock(data);

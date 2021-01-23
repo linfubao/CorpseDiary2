@@ -47,7 +47,6 @@ export default class UIScrollSelect extends cc.Component {
     private dx: number = 0;
     private moveAim: number = 0;
 
-
     init(type) {
         this.childs = [];
         for (let i = 0; i < this.content.children.length; i++) {
@@ -61,13 +60,16 @@ export default class UIScrollSelect extends cc.Component {
         this.currentIndex = 0;
 
         const useingData = GameMag.Ins.useingData;
+        let id = null;
         if (type == "skin") {
-            const useSkin = useingData.skin;
-            this.scrollTo(useSkin, false);
+            id = useingData.skin;
         } else {
-            const useMecha = useingData.mecha;
-            this.scrollTo(useMecha, false);
+            id = useingData.mecha;
+            if (id < 0) {
+                id = 0;
+            }
         }
+        this.scrollTo(id, false);
         cc.director.on("scrollToRole", this.scrollToRole, this);
         cc.director.on("scrollToMecha", this.scrollToMecha, this);
     }

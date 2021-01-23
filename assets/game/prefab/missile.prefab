@@ -46,7 +46,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": -60,
+      "width": -100,
       "height": 200
     },
     "_anchorPoint": {
@@ -125,7 +125,7 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        -98,
+        -138,
         0,
         0,
         0,
@@ -166,7 +166,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "2a9d6415-1a81-4f32-8eb6-16ed34096447"
+      "__uuid__": "d0b5ef89-bb52-4aa8-af97-52a2b64b1f11"
     },
     "_type": 0,
     "_sizeMode": 0,
@@ -180,7 +180,7 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_atlas": {
-      "__uuid__": "abbcee68-7f40-4cd7-8987-f2fcdc61ec73"
+      "__uuid__": "15ba2fc8-5d09-4994-b000-1d7742dfd160"
     },
     "_id": ""
   },
@@ -299,7 +299,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "2a9d6415-1a81-4f32-8eb6-16ed34096447"
+      "__uuid__": "d0b5ef89-bb52-4aa8-af97-52a2b64b1f11"
     },
     "_type": 0,
     "_sizeMode": 0,
@@ -313,7 +313,7 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_atlas": {
-      "__uuid__": "abbcee68-7f40-4cd7-8987-f2fcdc61ec73"
+      "__uuid__": "15ba2fc8-5d09-4994-b000-1d7742dfd160"
     },
     "_id": ""
   },
@@ -391,7 +391,7 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        98,
+        138,
         0,
         0,
         0,
@@ -432,7 +432,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "2a9d6415-1a81-4f32-8eb6-16ed34096447"
+      "__uuid__": "d0b5ef89-bb52-4aa8-af97-52a2b64b1f11"
     },
     "_type": 0,
     "_sizeMode": 0,
@@ -446,7 +446,7 @@
     "_fillRange": 0,
     "_isTrimmedMode": true,
     "_atlas": {
-      "__uuid__": "abbcee68-7f40-4cd7-8987-f2fcdc61ec73"
+      "__uuid__": "15ba2fc8-5d09-4994-b000-1d7742dfd160"
     },
     "_id": ""
   },
@@ -492,7 +492,7 @@
     "_enabled": true,
     "_layoutSize": {
       "__type__": "cc.Size",
-      "width": -60,
+      "width": -100,
       "height": 200
     },
     "_resize": 1,
@@ -507,7 +507,7 @@
     "_N$paddingRight": 0,
     "_N$paddingTop": 0,
     "_N$paddingBottom": 0,
-    "_N$spacingX": 60,
+    "_N$spacingX": 100,
     "_N$spacingY": 0,
     "_N$verticalDirection": 1,
     "_N$horizontalDirection": 0,

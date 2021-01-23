@@ -15,8 +15,8 @@ export default class gameGunItem extends cc.Component {
     icon: cc.Sprite = null;
     @property(cc.Node)
     actives: cc.Node = null;
-    @property(cc.Node)
-    tipNode: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "无尽子弹图标" })
+    endlessNode: cc.Node = null;
 
     index: number = 0;
     gunID: number = 0;
@@ -41,7 +41,9 @@ export default class gameGunItem extends cc.Component {
         let info = this.cigData[this.gunID];
         if (info.buyOnceCost == 0) {
             this.bulletNum.node.active = false;
+            this.endlessNode.active = true;
         } else {
+            this.endlessNode.active = false;
             this.bulletNum.node.active = true;
             let localData = GameMag.Ins.gunData;
             let num = null; //子弹数量
@@ -62,13 +64,17 @@ export default class gameGunItem extends cc.Component {
             this.bulletNum.string = String(num);
         }
     }
-    showGunActive(index) {
+    showGunActive(index, gunID) {
         this.actives.active = true;
         cc.director.emit("freshRoleGun", index);
+        GameMag.Ins.nowGunIndex = index;
+        GameMag.Ins.lastGunIndex = index;
+        this.scheduleOnce(() => {
+            this.checkBulletTip();
+        }, 0)
     }
     switchGun() {
         AudioMag.getInstance().playSound("更换枪支");
-        this.hideTip();
         let gunList = [];
         let gunEquip = GameMag.Ins.tryGunEquip || GameMag.Ins.useingData.gunEquip;
         gunEquip.forEach(element => {
@@ -76,34 +82,45 @@ export default class gameGunItem extends cc.Component {
                 gunList.push(element);
             }
         });
-        for (let i = 0, len = gunList.length; i < len; i++) {
-            if (gunList[i] == this.gunID) {
-                this.actives.active = false;
-                let arr = this.node.parent.children;
-                i++;
-                let index = null;
-                if (i < len) {
-                    index = i;
-                } else {
-                    index = 0;
-                }
-                if (!GameMag.Ins.tryGunEquip) {
-                    GameMag.Ins.updateUseingDataByGun(gunList[index]);
-                } else {
-                    GameMag.Ins.tryGun = gunList[index];
-                }
-                arr[index].getChildByName("showActive").active = true;
-                this.iconAction(arr[index].getChildByName("icon"));
-                cc.director.emit("freshRoleGun", index);
-                break;
-            }
+        // console.log(gunList);
+        let i = GameMag.Ins.nowGunIndex;
+        if (i == gunList.length - 1) {
+            i = 0;
+        } else {
+            i++;
         }
-    }
-    hideTip() {
-        if (this.tipNode.active === true) {
-            this.tipNode.stopAllActions();
-            this.tipNode.active = false;
+        GameMag.Ins.nowGunIndex = i;
+        this.actives.active = false;
+        cc.director.emit("showGunActive" + i, i);
+        if (!GameMag.Ins.tryGunEquip) {
+            GameMag.Ins.updateUseingDataByGun(gunList[i]);
+        } else {
+            GameMag.Ins.tryGun = gunList[i];
         }
+
+
+        // for (let i = 0, len = gunList.length; i < len; i++) {
+        //     if (gunList[i] == this.gunID) {
+        //         this.actives.active = false;
+        //         let arr = this.node.parent.children;
+        //         i++;
+        //         let index = null;
+        //         if (i < len) {
+        //             index = i;
+        //         } else {
+        //             index = 0;
+        //         }
+        //         if (!GameMag.Ins.tryGunEquip) {
+        //             GameMag.Ins.updateUseingDataByGun(gunList[index]);
+        //         } else {
+        //             GameMag.Ins.tryGun = gunList[index];
+        //         }
+        //         arr[index].getChildByName("showActive").active = true;
+        //         this.iconAction(arr[index].getChildByName("icon"));
+        //         cc.director.emit("freshRoleGun", index);
+        //         break;
+        //     }
+        // }
     }
     //更新子弹数量
     updateBulletNum() {
@@ -114,7 +131,7 @@ export default class gameGunItem extends cc.Component {
         if (this.recordTryGun && this.recordTryGun == gun) {
             // console.log("试用的武器");
             GameMag.Ins.tryGunBullet--;
-            if(GameMag.Ins.tryGunBullet == 0) {//试用枪的子弹用完后直接清除掉
+            if (GameMag.Ins.tryGunBullet == 0) {//试用枪的子弹用完后直接清除掉
                 this.switchGun();
                 GameMag.Ins.tryGun = null;
                 this.recordTryGun = null;
@@ -127,15 +144,10 @@ export default class gameGunItem extends cc.Component {
         }
         this.lastNum--;
         this.bulletNum.string = String(this.lastNum);
+        this.checkBulletTip();
         if (this.lastNum <= 0) {
             console.log("子弹数量不够了");
             this.icon.node.color = cc.color(115, 115, 115);
-            this.tipNode.active = true;
-            cc.tween(this.tipNode.getChildByName("hand"))
-                .repeatForever(
-                    cc.tween().to(0.35, { scale: 1.2 }).delay(0.2).to(0.35, { scale: 1 }).delay(0.2)
-                )
-                .start();
         }
     }
     //购买子弹
@@ -145,11 +157,11 @@ export default class gameGunItem extends cc.Component {
         if (info && info.buyOnceCost != 0 && coin >= info.buyOnceCost) {//buyOnceCost:说明这是把可以买子弹的枪
             // console.log(info);
             AudioMag.getInstance().playSound("购买子弹");
-            this.hideTip();
             GameMag.Ins.updateGunDataByBulletNum(this.gunID, info.buyOnceNum);
             GameMag.Ins.updateCurrency(0, -info.buyOnceCost);
             cc.director.emit("updateCurrency");
             this.lastNum += info.buyOnceNum;
+            this.checkBulletTip();
             this.bulletNum.string = String(this.lastNum);
             this.icon.node.color = cc.color(255, 255, 255);
             //显示扣的钱
@@ -179,9 +191,12 @@ export default class gameGunItem extends cc.Component {
             return;
         }
         AudioMag.getInstance().playSound("按钮音");
-        this.node.parent.children.forEach(item => {
-            item.getChildByName("showActive").active = false;
-        })
+        GameMag.Ins.nowGunIndex = this.index;
+        // this.node.parent.children.forEach(item => {
+        //     item.getChildByName("showActive").active = false;
+        // })
+        const lastItem = this.node.parent.children[GameMag.Ins.lastGunIndex];
+        lastItem.getChildByName("showActive").active = false;
         this.actives.active = true;
         if (!GameMag.Ins.tryGunEquip) {
             GameMag.Ins.updateUseingDataByGun(this.gunID);
@@ -190,6 +205,18 @@ export default class gameGunItem extends cc.Component {
         }
         this.iconAction(this.icon.node);
         cc.director.emit("freshRoleGun", this.index);
+        GameMag.Ins.lastGunIndex = this.index;
+        this.checkBulletTip();
+    }
+    checkBulletTip() {
+        cc.director.emit("buyBulletTip", false);
+        let gun = GameMag.Ins.tryGun === null ? this.gunID : GameMag.Ins.tryGun;
+        let info = this.cigData[gun];
+        if (this.lastNum < GameMag.Ins.bulletWarnNum && info.buyOnceCost > 0) {
+            cc.director.emit("buyBulletTip", true, this.node);
+        } else if (this.lastNum >= GameMag.Ins.bulletWarnNum) {
+            cc.director.emit("buyBulletTip", false);
+        }
     }
     iconAction(node) {
         cc.tween(node)

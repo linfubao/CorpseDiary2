@@ -178,7 +178,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 373.47,
-      "height": 265.52
+      "height": 266.02
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -233,7 +233,7 @@
     "_cacheMode": 0,
     "playTimes": -1,
     "premultipliedAlpha": false,
-    "_armatureKey": "9f0fb321-291c-420d-bcb4-207c1958766b#0f166cef-d2e5-49a2-8037-5130c7af465d",
+    "_armatureKey": "c90712c6-78ad-4d81-9cb8-5ad5eb612085#568d2cdf-dc23-43e2-b120-85abf6c22bbf",
     "_accTime": 0,
     "_playCount": 0,
     "_frameCache": null,
@@ -241,10 +241,10 @@
     "_playing": false,
     "_armatureCache": null,
     "_N$dragonAsset": {
-      "__uuid__": "9f0fb321-291c-420d-bcb4-207c1958766b"
+      "__uuid__": "c90712c6-78ad-4d81-9cb8-5ad5eb612085"
     },
     "_N$dragonAtlasAsset": {
-      "__uuid__": "0f166cef-d2e5-49a2-8037-5130c7af465d"
+      "__uuid__": "568d2cdf-dc23-43e2-b120-85abf6c22bbf"
     },
     "_N$_defaultArmatureIndex": 0,
     "_N$_animationIndex": 0,
@@ -293,7 +293,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 373.47,
-      "height": 265.52
+      "height": 266.02
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -348,7 +348,7 @@
     "_cacheMode": 0,
     "playTimes": -1,
     "premultipliedAlpha": false,
-    "_armatureKey": "a7fa92d3-f98e-47b4-b856-b700dc393ba1#4071d118-22c6-4fe4-8362-99042cbc3866",
+    "_armatureKey": "aaa1c791-ccd4-4519-95fc-0082d864e6e5#0760b956-2984-4f48-bf89-a5dee0cff44b",
     "_accTime": 0,
     "_playCount": 0,
     "_frameCache": null,
@@ -356,10 +356,10 @@
     "_playing": false,
     "_armatureCache": null,
     "_N$dragonAsset": {
-      "__uuid__": "a7fa92d3-f98e-47b4-b856-b700dc393ba1"
+      "__uuid__": "aaa1c791-ccd4-4519-95fc-0082d864e6e5"
     },
     "_N$dragonAtlasAsset": {
-      "__uuid__": "4071d118-22c6-4fe4-8362-99042cbc3866"
+      "__uuid__": "0760b956-2984-4f48-bf89-a5dee0cff44b"
     },
     "_N$_defaultArmatureIndex": 0,
     "_N$_animationIndex": 0,
@@ -408,7 +408,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 373.47,
-      "height": 265.52
+      "height": 266.02
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -463,7 +463,7 @@
     "_cacheMode": 0,
     "playTimes": -1,
     "premultipliedAlpha": false,
-    "_armatureKey": "e6e1b1b5-0415-41e9-8d52-73838617db51#6f148fcf-7768-420b-a92c-c5fc1b359475",
+    "_armatureKey": "dca53b43-f14a-4c2f-a5a5-af587994919a#19c2a13a-6726-4e59-8791-5a4696e58908",
     "_accTime": 0,
     "_playCount": 0,
     "_frameCache": null,
@@ -471,10 +471,10 @@
     "_playing": false,
     "_armatureCache": null,
     "_N$dragonAsset": {
-      "__uuid__": "e6e1b1b5-0415-41e9-8d52-73838617db51"
+      "__uuid__": "dca53b43-f14a-4c2f-a5a5-af587994919a"
     },
     "_N$dragonAtlasAsset": {
-      "__uuid__": "6f148fcf-7768-420b-a92c-c5fc1b359475"
+      "__uuid__": "19c2a13a-6726-4e59-8791-5a4696e58908"
     },
     "_N$_defaultArmatureIndex": 0,
     "_N$_animationIndex": 0,

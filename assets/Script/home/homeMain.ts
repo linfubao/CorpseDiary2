@@ -384,18 +384,18 @@ export default class HomeMain extends cc.Component {
         for (let index = 0; index < cigData.length; index++) {
             const item = cigData[index];
             if (taskData.killSum >= item.killNum && !taskData.data[index].geted) {
-                this.taskArrow.active = true;
-                const ps = this.taskArrow.position;
-                let action = cc.repeatForever(
-                    cc.sequence(
-                        cc.moveTo(0.5, ps.x, ps.y - 6),
-                        cc.moveTo(0.5, ps.x, ps.y + 6)
-                    )
-                )
-                this.taskArrow.stopAllActions();
-                cc.tween(this.taskArrow)
-                    .then(action)
-                    .start();
+                // this.taskArrow.active = true;
+                // const ps = this.taskArrow.position;
+                // let action = cc.repeatForever(
+                //     cc.sequence(
+                //         cc.moveTo(0.5, ps.x, ps.y - 6),
+                //         cc.moveTo(0.5, ps.x, ps.y + 6)
+                //     )
+                // )
+                // this.taskArrow.stopAllActions();
+                // cc.tween(this.taskArrow)
+                //     .then(action)
+                //     .start();
                 return;
             } else {
                 this.taskArrow.active = false;
@@ -429,14 +429,14 @@ export default class HomeMain extends cc.Component {
                     break;
             }
             if (num >= cigData[i].target && !achieveData[i].geted) {
-                this.achieveCup.stopAllActions();
-                this.achieveCup.opacity = 255;
-                const _t = 0.7;
-                let ac = cc.tween().to(_t, { opacity: 0 }).to(_t, { opacity: 255 }).delay(_t);
-                cc.tween(this.achieveCup)
-                    .then(ac)
-                    .repeatForever()
-                    .start();
+                // this.achieveCup.stopAllActions();
+                // this.achieveCup.opacity = 255;
+                // const _t = 0.7;
+                // let ac = cc.tween().to(_t, { opacity: 0 }).to(_t, { opacity: 255 }).delay(_t);
+                // cc.tween(this.achieveCup)
+                //     .then(ac)
+                //     .repeatForever()
+                //     .start();
                 break;
             }
         }

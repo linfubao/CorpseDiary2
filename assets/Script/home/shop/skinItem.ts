@@ -57,7 +57,6 @@ export default class SkinItem extends cc.Component {
     }
     showItemActive(index) {
         if (index == this.index) {
-            this.showScale(this.equipIcon, 0.25, 2.5);
             this.freshUI();
         }
     }

@@ -7,24 +7,15 @@
 		"preloadBackgroundData": false,
 		"minified": false,
 		"newFeature": false,
-		"coverView": true,
 		"autoAudits": false,
+		"coverView": true,
 		"showShadowRootInWxmlPanel": true,
 		"scopeDataCheck": false,
-		"checkInvalidKey": true,
-		"checkSiteMap": true,
-		"uploadWithSourceMap": true,
-		"babelSetting": {
-			"ignore": [],
-			"disablePlugins": [],
-			"outputPath": ""
-		},
-		"useCompilerModule": false,
-		"userConfirmedUseCompilerModuleSwitch": false
+		"useCompilerModule": false
 	},
 	"compileType": "game",
 	"libVersion": "game",
-	"appid": "wx55c29ee86c42c2e6",
+	"appid": "wxab11a19fbf40a4b1",
 	"projectname": "Corpse1",
 	"simulatorType": "wechat",
 	"simulatorPluginLibVersion": {},

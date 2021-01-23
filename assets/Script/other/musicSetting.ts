@@ -27,6 +27,7 @@ export default class MusicSetting extends cc.Component {
         //     // cc.audioEngine.pauseMusic();
         // }
         e.target.getChildByName("off").active = !status;
+        this.musicBtn.getChildByName("on").active = status;
     }
     onSoundBtn(e) {
         AudioMag.getInstance().changeSoundState();
@@ -39,5 +40,6 @@ export default class MusicSetting extends cc.Component {
         //     // cc.audioEngine.pauseAllEffects();
         // }
         e.target.getChildByName("off").active = !status;
+        this.soundBtn.getChildByName("on").active = status;
     }
 }

@@ -22,18 +22,19 @@ export default class Role extends cc.Component {
     recordBloodBar: number = 0;
     mechaBlood: number = null;
     useMecha: boolean = false;
-    info: any = null;
+    cigData: any = null;
+    skinData: any = null;
     assistHurtNum: number = null;
     roleDie: boolean = false;
 
     onLoad() {
         this.bloodBar.progress = 1;
         const useSkin = GameMag.Ins.trySkin || GameMag.Ins.useingData.skin;
-        let info = ConfigMag.Ins.getSkinData()[useSkin];
-        this.info = info;
-        let baseBlood = info.blood + 10;
+        this.cigData = ConfigMag.Ins.getSkinData()[useSkin];
+        this.skinData = GameMag.Ins.skinData[useSkin];
+        let baseBlood = this.skinData.blood + 10;
         if (useSkin === 3) {
-            baseBlood += baseBlood * info.talent;
+            baseBlood += baseBlood * this.cigData.talent;
         } else if (useSkin === 5) {
             this.schedule(this.addBloodSche, 1);
         }
@@ -45,7 +46,7 @@ export default class Role extends cc.Component {
         cc.director.on("useingMecha", this.useingMecha, this);
     }
     addBloodSche() {
-        this.bloodBar.progress += this.info.talent;
+        this.bloodBar.progress += this.cigData.talent;
         if (this.bloodBar.progress > 1) {
             this.bloodBar.progress = 1;
             GameMag.Ins.roleBlood = 1;
@@ -111,7 +112,7 @@ export default class Role extends cc.Component {
         cc.director.emit("showRoleBlood");
         AudioMag.getInstance().playSound("被攻击受伤");
         let hurt = this.assistHurtNum ? num - (num * (this.assistHurtNum / 100)) : num;//暂时减少x%伤害，持续10秒 : 实际伤害
-        let hurtNum = hurt - hurt * (this.info.armor / 10); //实际伤害 - 扣除护甲后的实际伤害 = 最后的真正伤害值, 除以10的意思是:护甲2说明伤害减伤20%
+        let hurtNum = hurt - hurt * (this.skinData.armor / 10); //实际伤害 - 扣除护甲后的实际伤害 = 最后的真正伤害值, 除以10的意思是:护甲2说明伤害减伤20%
         if (this.useMecha) {
             let rate = Number((hurtNum / this.mechaBlood).toFixed(2));
             this.bloodBar.progress -= rate;

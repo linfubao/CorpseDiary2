@@ -40,7 +40,7 @@ export default class GunItem extends cc.Component {
         this.gunData = data;
         this.index = index;
         this.icon.spriteFrame = sf;
-        this.gunName.spriteFrame = gunNameSf;
+        // this.gunName.spriteFrame = gunNameSf;
         this.freshGunItemUI();
         this.node.on(cc.Node.EventType.TOUCH_END, this.onStartTouch, this);
         cc.director.on("freshGunItemUI", this.freshGunItemUI, this);

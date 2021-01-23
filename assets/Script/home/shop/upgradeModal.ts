@@ -10,8 +10,16 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class UpgradeModal extends cc.Component {
 
+    @property(cc.SpriteAtlas)
+    shopAtlas: cc.SpriteAtlas = null;
     @property(cc.Node)
     content: cc.Node = null;
+    @property(cc.Sprite)
+    headIcon: cc.Sprite = null;
+    @property(cc.Sprite)
+    skinName: cc.Sprite = null;
+    @property(cc.Sprite)
+    skinDesc: cc.Sprite = null;
     @property({ type: cc.Node, tooltip: "关闭升级界面按钮" })
     closeUpgradeModal: cc.Node = null;
     @property({ type: cc.Label, tooltip: "血量等级" })
@@ -107,6 +115,9 @@ export default class UpgradeModal extends cc.Component {
         this.bloodUpCost.string = "x" + this.ciginfo.bloodUpCost;
         this.speedUpCost.string = "x" + this.ciginfo.speedUpCost;
         this.armorUpCost.string = "x" + this.ciginfo.armorUpCost;
+        this.headIcon.spriteFrame = this.shopAtlas.getSpriteFrame("skinIcon_" + this.index);
+        this.skinName.spriteFrame = this.shopAtlas.getSpriteFrame("skinName_" + this.index);
+        this.skinDesc.spriteFrame = this.shopAtlas.getSpriteFrame("skinDesc_" + this.index);
     }
     refreshSkillLv() {
         const info = GameMag.Ins.skinData[this.index];

@@ -16,9 +16,8 @@ export default class Enemy extends cc.Component {
 
     groundY: number = -190; //尸块掉到地板的坐标
     touchRole: boolean = false; //控制伤害时机
-    roleCanMove: boolean = true;//控制移动时机
+    stopMove: boolean = false;//控制小怪移动时机
     touchTongue: boolean = false;
-    stopMove: boolean = false;
     frozen: boolean = false;
     die: boolean = false;
     attackComplete: boolean = true;
@@ -46,6 +45,7 @@ export default class Enemy extends cc.Component {
     step1: boolean = false;
     step2: boolean = false;
     step3: boolean = false;
+    testingRole: boolean = null;
 
     init(tag, roleNode) {
         this.role = roleNode;
@@ -69,9 +69,8 @@ export default class Enemy extends cc.Component {
         this.enemyData = cigData;
         this.taskType = GameMag.Ins.taskType;
         this.touchRole = false;
-        this.roleCanMove = true;
-        this.touchTongue = false;
         this.stopMove = false;
+        this.touchTongue = false;
         this.frozen = false;
         this.die = false;
         this.attackComplete = true;
@@ -80,6 +79,11 @@ export default class Enemy extends cc.Component {
         this.step1 = false;
         this.step2 = false;
         this.step3 = false;
+        if (this.taskType === 5 || this.taskType === 9 || this.taskType === 4) {
+            this.testingRole = false; //不需要检测主角的碰撞
+        } else {
+            this.testingRole = true;
+        }
         this.node.getComponent(cc.BoxCollider).enabled = true;
         this.canvasNode = cc.find("Canvas");
         this.corpsesBox = this.canvasNode.getChildByName("corpsesBox");
@@ -109,12 +113,12 @@ export default class Enemy extends cc.Component {
                     cc.director.emit("hurtRole", this.enemyData.power);
                     return;
                 }
-                if (this.taskType === 4 || this.taskType === 5 || this.taskType === 9) return;
+                if (this.taskType === 4 || !this.testingRole) return;
                 if (self.tag == 16) { //舌头
                     this.touchTongue = true;
                 } else {
                     this.touchRole = true;
-                    this.roleCanMove = false;
+                    this.stopMove = true;
                 }
                 if (!this.frozen) {
                     this.attack();
@@ -174,7 +178,7 @@ export default class Enemy extends cc.Component {
                     this.touchTongue = true;
                 } else {
                     this.touchRole = true;
-                    this.roleCanMove = false;
+                    this.stopMove = true;
                 }
                 if (this.tag == 7 && !this.frozen) {//炸弹怪
                     this.showBlastSmoke();
@@ -383,14 +387,10 @@ export default class Enemy extends cc.Component {
         }
         let flag = this.node.scaleX;
         let target = this.dragon.node;
-        this.stopMove = true;
         target.stopAllActions();
         cc.tween(target)
             .to(0.05, { angle: 3 * -flag })
             .to(0.05, { angle: 0 })
-            .call(() => {
-                self.stopMove = false;
-            })
             .start();
     }
     //切换龙骨动作
@@ -593,31 +593,40 @@ export default class Enemy extends cc.Component {
         })
     }
     touchRoleFalse() {
-        this.roleCanMove = true;
+        this.stopMove = false;
         this.judgeExitedAnimate();
     }
     touchTongueFalse() {
-        this.roleCanMove = true;
+        this.stopMove = false;
         this.touchTongue = false;
         this.judgeExitedAnimate();
     }
     onCollisionExit(other, self) {
         // console.log('on collision exit', "other", other.tag, self.tag);
         if (this.die || GameMag.Ins.gameOver) return;
-        if (other.tag == 2 || other.tag == 20) {
-            this.touchRole = false;
-            if (self.tag == 16) { //舌头怪的舌头
-                this.unschedule(this.touchTongueFalse);
-                this.scheduleOnce(this.touchTongueFalse, 0.05);
-                return;
-            }
-            if (this.touchTongue) return;
-            this.unschedule(this.touchRoleFalse);
-            this.scheduleOnce(this.touchRoleFalse, 0.3);
+        if (other.tag === 20) {
+            this.testingExit(self);
         }
+        if (!this.testingRole && other.tag === 2) return; //不检测主角
+        if (other.tag === 2) {
+            this.testingExit(self);
+        }
+    }
+    testingExit(self) {
+        this.touchRole = false;
+        if (self.tag == 16) { //舌头怪的舌头
+            this.unschedule(this.touchTongueFalse);
+            this.scheduleOnce(this.touchTongueFalse, 0.05);
+            return;
+        }
+        if (this.touchTongue) return;
+        this.unschedule(this.touchRoleFalse);
+        this.scheduleOnce(this.touchRoleFalse, 0.3);
     }
     //判断结束碰撞之后的小怪动作
     judgeExitedAnimate() {
+        // console.log(this.enemyStatus);
+        if (this.die || GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
         if (this.enemyStatus === 0) {
             this.enemyAnimate(enemyAnimate.Walk0, 0);
         } else if (this.enemyStatus === 1) {
@@ -627,17 +636,14 @@ export default class Enemy extends cc.Component {
         }
     }
     update(dt) {
-        if (this.stopMove || this.frozen || this.die || GameMag.Ins.gamePause || GameMag.Ins.gameOver) {
-            return;
-        }
+        if (this.frozen || this.die || GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
         if (this.taskType === 4) { //防御模式
-            if (!this.roleCanMove || this.touchTongue) return;
             this.node.x -= this.speed * dt;
             return;
         }
         let x = null;
         const dis = 15;
-        if (this.taskType === 5 || this.taskType === 9) {
+        if (!this.testingRole) {
             x = this.babyNode.x;
             if (this.node.x > x + dis && this.node.scaleX < 0) { //怪物在baby右侧
                 this.node.scaleX = 1;
@@ -652,7 +658,7 @@ export default class Enemy extends cc.Component {
                 this.node.scaleX = -1;
             }
         }
-        if (!this.roleCanMove || this.touchTongue) return;
+        if (this.stopMove || this.touchTongue) return;
         let flag = x < this.node.x ? 1 : -1;
         this.node.x += -flag * this.speed * dt;
     }

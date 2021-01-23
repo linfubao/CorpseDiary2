@@ -11,6 +11,8 @@ export default class GunPage extends cc.Component {
 
     @property(cc.SpriteAtlas)
     homeAtlas: cc.SpriteAtlas = null;
+    @property(cc.SpriteAtlas)
+    shopAtlas: cc.SpriteAtlas = null;
     @property(cc.ScrollView)
     scrollView: cc.ScrollView = null;
     @property(cc.Node)
@@ -107,7 +109,7 @@ export default class GunPage extends cc.Component {
             let node = cc.instantiate(prefab);
             let gunID = self.equipData[self.equipIndex];
             let lv = 0;
-            let sf = self.homeAtlas.getSpriteFrame(`gunName_${gunID}_${lv}`);
+            let sf = self.homeAtlas.getSpriteFrame("gunName_" + gunID);
             node.getComponent("gunEquip").init(gunID, self.equipIndex, sf);
             node.parent = self.equipBox;
             self.equipIndex++;
@@ -247,7 +249,7 @@ export default class GunPage extends cc.Component {
         let self = this;
         ToolsMag.Ins.getHomeResource("prefab/shop/gunItem", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
-            let sf = self.homeAtlas.getSpriteFrame("gunIcon_" + self.index);
+            let sf = self.homeAtlas.getSpriteFrame("gun_" + self.index);
             let lv = 0;
             let gunNameSf = self.homeAtlas.getSpriteFrame(`gunName_${self.index}_${lv}`);
             node.getComponent("gunItem").init(self.index, self.gunData[self.index], sf, gunNameSf);
@@ -267,8 +269,8 @@ export default class GunPage extends cc.Component {
         this.clickFlag = data.gunID;
         let localData = GameMag.Ins.gunData[data.gunID];
         // console.log(data, localData);
-        this.gunName.spriteFrame = this.homeAtlas.getSpriteFrame("gunName_" + data.gunID);
-        this.gunDesc.spriteFrame = this.homeAtlas.getSpriteFrame("gunDesc_" + data.gunDescType);
+        this.gunName.spriteFrame = this.shopAtlas.getSpriteFrame("gunName_" + data.gunID);
+        this.gunDesc.spriteFrame = this.shopAtlas.getSpriteFrame("gunDesc_" + data.gunDescType);
         let lockStatus = localData.lockStatus;
         // console.log("lockStatus", lockStatus);
         this.buyGunBtn.active = !lockStatus;
@@ -356,6 +358,7 @@ export default class GunPage extends cc.Component {
     }
     //加载技能显示块
     loadSkillBlock(data) {
+        return
         this.powerCount = 0;
         this.speedCount = 0;
         this.powerNode.destroyAllChildren();
@@ -410,11 +413,11 @@ export default class GunPage extends cc.Component {
             .start();
     }
     onDisable() {
-        this.speedNode.destroyAllChildren();
-        this.powerNode.destroyAllChildren();
-        this.powerCount = 0;
-        this.speedCount = 0;
-        this.loadPower(this.gunData[this.clickFlag]);
-        this.loadSpeed(this.gunData[this.clickFlag]);
+        // this.speedNode.destroyAllChildren();
+        // this.powerNode.destroyAllChildren();
+        // this.powerCount = 0;
+        // this.speedCount = 0;
+        // this.loadPower(this.gunData[this.clickFlag]);
+        // this.loadSpeed(this.gunData[this.clickFlag]);
     }
 }

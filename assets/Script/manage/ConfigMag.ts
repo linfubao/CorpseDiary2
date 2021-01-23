@@ -1075,10 +1075,9 @@ export enum enemyAnimate {
 export enum mechaAnimate {
     Stay = "stay",
     Walk = "walk",
-    ShopUp = "show_up", //出场,落地的时候播放,紧接着播待机
+    ShopUp = "show_up", //出场,落地的时候播放,紧接着播放待机
     Fire = "stay_fier",
     WalkFire = "walk_fier"
-
 }
 const { ccclass, property } = cc._decorator;
 

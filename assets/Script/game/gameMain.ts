@@ -18,6 +18,8 @@ export default class GameMain extends cc.Component {
     shopAtlas: cc.SpriteAtlas = null;
     @property(cc.SpriteAtlas)
     gameAtlas: cc.SpriteAtlas = null;
+    @property(cc.SpriteAtlas)
+    gameMainAtlas: cc.SpriteAtlas = null;
     @property(cc.Node)
     roleCamera: cc.Node = null;
     @property({ type: [cc.Prefab], tooltip: "地图预制" })
@@ -105,9 +107,14 @@ export default class GameMain extends cc.Component {
     gameRoleBlood: cc.Node = null;
     @property({ type: cc.Node, tooltip: "钥匙模式随机出现的钥匙" })
     gameKey: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "子弹不足提示" })
+    buyBulletTip: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "提示玩家长按射击" })
+    longPressTip: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "子弹不足预警" })
+    bulletWarn: cc.Node = null;
 
     moveSpeed: number = 0;
-    babyMoveSpeed: number = 0; //那小子的移动速度
     moveLeft: boolean = false;
     moveRight: boolean = false;
     bulletShellsPool: cc.NodePool = null;
@@ -123,11 +130,12 @@ export default class GameMain extends cc.Component {
     secondNum: number = 0;
     keyNum: number = 0;
     defenseNum: number = null;
-    mecha: cc.Node = null;
+    mechaNode: cc.Node = null;
     mecheTime: number = 0;//显示机甲的倒计时初始时间
     mecheCountTime: number = 0;//显示机甲的倒计时时间
-    mecheSpeed: number = null;//机甲的速度
+    mechaSpeed: number = null;//机甲的攻击速度
     mecheShowTime: boolean = false;//是否正在显示机甲,就是从天上掉下来到地面的这段时间,主要是为了不让玩家进行别的移动等操作
+    mecheAttacking: boolean = false; //机甲是否正在攻击中,控制攻击频率
     assistSpeed: number = null;//使用了加速道具后的速度
     recordTryGun: number = null;//因为GameMag.Ins.tryGun会一直变,所以用这个变量记录最初的试用武器
     initBabyPs: number = -160; //要护卫的那小子的初始位置
@@ -140,6 +148,7 @@ export default class GameMain extends cc.Component {
     assistItemIndex: number = 0;
     assistItemLen: number = 0;
 
+    enemyData: any[] = null;
     enemyTime0: number = null;
     enemyTime1: number = null;
     enemyTime2: number = null;
@@ -155,6 +164,7 @@ export default class GameMain extends cc.Component {
     enemyTime12: number = null;
 
     onLoad() {
+        // DialogMag.Ins.show(DialogPath.ResultDialog, DialogScript.ResultDialog, [false]);
         AudioMag.getInstance().playBGM("gameBGM");
         this.initData();
         this.initUI();
@@ -183,7 +193,6 @@ export default class GameMain extends cc.Component {
         GameMag.Ins.gameKillNum = 0;
         GameMag.Ins.roleBlood = 1;
         GameMag.Ins.timeStart = new Date().getTime();
-        this.babyMoveSpeed = 200;
         let useSkin = GameMag.Ins.trySkin || GameMag.Ins.useingData.skin;
         const info = GameMag.Ins.skinData[useSkin];
         const cigInfo = ConfigMag.Ins.getSkinData()[useSkin];
@@ -238,6 +247,7 @@ export default class GameMain extends cc.Component {
         cc.director.on("showRoleBlood", this.showRoleBlood, this); //显示主角(或baby)被攻击时屏幕左右两边的血
         cc.director.on("showGameKey", this.showGameKey, this); //钥匙模式随机出现的钥匙
         cc.director.on("hideMecha", this.hideMecha, this); //机甲消失
+        cc.director.on("buyBulletTip", this.showBuyBulletTip, this); //显示子弹不足提示
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
         this.leftBtn.on(cc.Node.EventType.TOUCH_START, this.onMoveLeftStart, this);
@@ -252,6 +262,33 @@ export default class GameMain extends cc.Component {
         this.attackBtn.on(cc.Node.EventType.TOUCH_END, this.onAttackEnd, this);
         this.attackBtn.on(cc.Node.EventType.TOUCH_CANCEL, this.onAttackEnd, this);
         this.pauseBtn.on(cc.Node.EventType.TOUCH_START, this.onPauseBtn, this);
+    }
+    showBuyBulletTip(status: boolean, target: cc.Node = null) {
+        this.buyBulletTip.active = status;
+        this.bulletWarn.active = status;
+        if (!status) return;
+        // console.log("展示子弹不足");
+        const action = cc.blink(3, 8);
+        this.bulletWarn.stopAllActions();
+        cc.tween(this.bulletWarn)
+            .to(0.1, { scale: 1 })
+            .repeatForever(
+                cc.tween()
+                    .to(0.25, { scale: 0.8 })
+                    .to(0.25, { scale: 1 })
+            )
+            .then(action)
+            .start();
+        let wps = target.parent.convertToWorldSpaceAR(target.position);
+        let lps = this.node.convertToNodeSpaceAR(wps);
+        const hand = this.buyBulletTip.getChildByName("hand");
+        this.buyBulletTip.setPosition(lps);
+        hand.stopAllActions();
+        cc.tween(hand)
+            .repeatForever(
+                cc.tween().to(0.35, { scale: 1.2 }).delay(0.2).to(0.35, { scale: 1 }).delay(0.2)
+            )
+            .start();
     }
     /**
      * 显示主角(或baby)被攻击时屏幕左右两边的血
@@ -277,65 +314,116 @@ export default class GameMain extends cc.Component {
             this.bulletShellsPool.put(bulletShells);
         }
     }
-    enemyData: any[] = null;
     showEnemy() {
         // return
         const level = GameMag.Ins.level;
-        this.enemyData = ConfigMag.Ins.getEnemyData();
-        // console.log(this.enemyData);
-        this.enemyTime0 = this.enemyTime0 || this.enemyData[0].time;
-        this.enemyTime1 = this.enemyTime1 || this.enemyData[1].time;
-        this.enemyTime2 = this.enemyTime2 || this.enemyData[2].time;
-        this.enemyTime3 = this.enemyTime3 || this.enemyData[3].time;
-        this.enemyTime4 = this.enemyTime4 || this.enemyData[4].time;
-        this.enemyTime5 = this.enemyTime5 || this.enemyData[5].time;
-        this.enemyTime6 = this.enemyTime6 || this.enemyData[6].time;
-        this.enemyTime7 = this.enemyTime7 || this.enemyData[7].time;
-        this.enemyTime8 = this.enemyTime8 || this.enemyData[8].time;
-        this.enemyTime9 = this.enemyTime9 || this.enemyData[9].time;
-        this.enemyTime10 = this.enemyTime10 || this.enemyData[10].time;
-        this.enemyTime11 = this.enemyTime11 || this.enemyData[11].time;
-        this.enemyTime12 = this.enemyTime12 || this.enemyData[12].time;
-        this.loadSchedule0(this.enemyData[0]);
-        this.loadSchedule1(this.enemyData[1]);
-        this.loadSchedule2(this.enemyData[2]);
+        const enemyData = ConfigMag.Ins.getEnemyData();
+        this.enemyData = enemyData;
+        // console.log(enemyData);
+        this.enemyTime0 = this.enemyTime0 || enemyData[0].time;
+        this.enemyTime1 = this.enemyTime1 || enemyData[1].time;
+        this.enemyTime2 = this.enemyTime2 || enemyData[2].time;
+        this.enemyTime3 = this.enemyTime3 || enemyData[3].time;
+        this.enemyTime4 = this.enemyTime4 || enemyData[4].time;
+        this.enemyTime5 = this.enemyTime5 || enemyData[5].time;
+        this.enemyTime6 = this.enemyTime6 || enemyData[6].time;
+        this.enemyTime7 = this.enemyTime7 || enemyData[7].time;
+        this.enemyTime8 = this.enemyTime8 || enemyData[8].time;
+        this.enemyTime9 = this.enemyTime9 || enemyData[9].time;
+        this.enemyTime10 = this.enemyTime10 || enemyData[10].time;
+        this.enemyTime11 = this.enemyTime11 || enemyData[11].time;
+        this.enemyTime12 = this.enemyTime12 || enemyData[12].time;
+        this.loadSchedule0(enemyData[0]);
+        this.loadSchedule1(enemyData[1]);
+        // if (GameMag.Ins.switchData && !GameMag.Ins.switchData.blood) return; //绿色模式不出下面的怪
+        this.loadSchedule2(enemyData[2]);
         if (level < 5) return;
-        this.loadSchedule3(this.enemyData[3]);
-        this.loadSchedule4(this.enemyData[4]);
-        this.loadSchedule5(this.enemyData[5]);
-        this.loadSchedule6(this.enemyData[6]);
-        this.loadSchedule7(this.enemyData[7]);
-        this.loadSchedule8(this.enemyData[8]);
-        this.loadSchedule9(this.enemyData[9]);
-        this.loadSchedule10(this.enemyData[10]);
-        this.loadSchedule11(this.enemyData[11]);
-        this.loadSchedule12(this.enemyData[12]);
+        this.loadSchedule3(enemyData[3]);
+        this.loadSchedule4(enemyData[4]);
+        this.loadSchedule5(enemyData[5]);
+        this.loadSchedule6(enemyData[6]);
+        this.loadSchedule7();
+        this.loadSchedule8(enemyData[8]);
+        this.loadSchedule9(enemyData[9]);
+        this.loadSchedule10(enemyData[10]);
+        this.loadSchedule11(enemyData[11]);
+        this.loadSchedule12(enemyData[12]);
     }
     loadEnemy(tag) {
         let self = this;
         GameMag.Ins.getEnemy(tag, function (node) {
             node.getComponent("enemy").init(tag, self.role);
             let camera = self.roleCamera;
-            const bool = self.taskIndex === 4 || self.taskIndex === 5 || self.taskIndex === 9;
-            let flag = bool ? 1 : Math.random() < 0.35 ? -1 : 1;//防御和护送模式只从右边出怪
+            let flag = Math.random() < 0.3 ? -1 : 1;
+            if (self.taskIndex === 4) {
+                flag = 1;
+            }
             let x = camera.x + (flag * (camera.width / 2 + 200));
             node.setPosition(x, self.role.y);
             node.parent = self.enemyBox.children[tag]; //每个怪都有对应的节点存放
         }.bind(this));
     }
+    enemyTimer(flag) {
+        // if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
+        this.loadEnemy(this.enemyData[flag].id);
+        switch (flag) {
+            case 0:
+                this.loadSchedule0(this.enemyData[0]);
+                break;
+            case 1:
+                this.loadSchedule1(this.enemyData[1]);
+                break;
+            case 2:
+                this.loadSchedule2(this.enemyData[2]);
+                break;
+            case 3:
+                this.loadSchedule3(this.enemyData[3]);
+                break;
+            case 4:
+                this.loadSchedule4(this.enemyData[4]);
+                break;
+            case 5:
+                this.loadSchedule5(this.enemyData[5]);
+                break;
+            case 6:
+                this.loadSchedule6(this.enemyData[6]);
+                break;
+            case 7:
+                this.loadSchedule7();
+                break;
+            case 8:
+                this.loadSchedule8(this.enemyData[8]);
+                break;
+            case 9:
+                this.loadSchedule9(this.enemyData[9]);
+                break;
+            case 10:
+                this.loadSchedule10(this.enemyData[10]);
+                break;
+            case 11:
+                this.loadSchedule11(this.enemyData[11]);
+                break;
+            case 12:
+                this.loadSchedule12(this.enemyData[12]);
+                break;
+            default:
+                break;
+        }
+    }
     loadSchedule0(data) {
         let time = data.finalTime;
+        // console.log(this.enemyTime0);
         if (this.enemyTime0 < data.finalTime) {
             this.enemyTime0 += data.time * (data.rate / 100);
             this.enemyTime0 = Number(this.enemyTime0.toFixed(1));
             time = Math.floor(this.enemyTime0);
         }
         // console.log("time", time, this.enemyTime0);
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule0(data);
-        }, time);
+        this.unschedule(this.enemyTimer0);
+        this.schedule(this.enemyTimer0, time);
+    }
+    enemyTimer0() {
+        this.enemyTimer(0);
     }
     loadSchedule1(data) {
         let time = data.finalTime;
@@ -345,11 +433,11 @@ export default class GameMain extends cc.Component {
             time = Math.floor(this.enemyTime1);
         }
         // console.log("time", time, this.enemyTime1);
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule1(data);
-        }, time);
+        this.unschedule(this.enemyTimer1);
+        this.schedule(this.enemyTimer1, time);
+    }
+    enemyTimer1() {
+        this.enemyTimer(1);
     }
     //眼镜
     loadSchedule2(data) {
@@ -359,11 +447,11 @@ export default class GameMain extends cc.Component {
             this.enemyTime2 = Number(this.enemyTime2.toFixed(1));
             time = Math.floor(this.enemyTime2);
         }
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule2(data);
-        }, time);
+        this.unschedule(this.enemyTimer2);
+        this.schedule(this.enemyTimer2, time);
+    }
+    enemyTimer2() {
+        this.enemyTimer(2);
     }
     //囚衣
     loadSchedule3(data) {
@@ -377,11 +465,11 @@ export default class GameMain extends cc.Component {
                 time = Math.floor(this.enemyTime3);
             }
         }
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule3(data);
-        }, time);
+        this.unschedule(this.enemyTimer3);
+        this.schedule(this.enemyTimer3, time);
+    }
+    enemyTimer3() {
+        this.enemyTimer(3);
     }
     //耳机
     loadSchedule4(data) {
@@ -395,11 +483,11 @@ export default class GameMain extends cc.Component {
                 time = Math.floor(this.enemyTime4);
             }
         }
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule4(data);
-        }, time);
+        this.unschedule(this.enemyTimer4);
+        this.schedule(this.enemyTimer4, time);
+    }
+    enemyTimer4() {
+        this.enemyTimer(4);
     }
     //棒球帽
     loadSchedule5(data) {
@@ -413,11 +501,11 @@ export default class GameMain extends cc.Component {
                 time = Math.floor(this.enemyTime5);
             }
         }
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule5(data);
-        }, time);
+        this.unschedule(this.enemyTimer5);
+        this.schedule(this.enemyTimer5, time);
+    }
+    enemyTimer5() {
+        this.enemyTimer(5);
     }
     //锅盖
     loadSchedule6(data) {
@@ -431,19 +519,19 @@ export default class GameMain extends cc.Component {
                 time = Math.floor(this.enemyTime6);
             }
         }
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule6(data);
-        }, time);
+        this.unschedule(this.enemyTimer6);
+        this.schedule(this.enemyTimer6, time);
+    }
+    enemyTimer6() {
+        this.enemyTimer(6);
     }
     //炸弹怪时间不变
-    loadSchedule7(data) {
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule7(data);
-        }, this.enemyTime7);
+    loadSchedule7() {
+        this.unschedule(this.enemyTimer7);
+        this.schedule(this.enemyTimer7, this.enemyTime7);
+    }
+    enemyTimer7() {
+        this.enemyTimer(7);
     }
     loadSchedule8(data) {
         let time = data.finalTime;
@@ -456,11 +544,11 @@ export default class GameMain extends cc.Component {
                 time = Math.floor(this.enemyTime8);
             }
         }
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule8(data);
-        }, time);
+        this.unschedule(this.enemyTimer8);
+        this.schedule(this.enemyTimer8, time);
+    }
+    enemyTimer8() {
+        this.enemyTimer(8);
     }
     //吐舌怪
     loadSchedule9(data) {
@@ -474,11 +562,11 @@ export default class GameMain extends cc.Component {
                 time = Math.floor(this.enemyTime9);
             }
         }
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule9(data);
-        }, time);
+        this.unschedule(this.enemyTimer9);
+        this.schedule(this.enemyTimer9, time);
+    }
+    enemyTimer9() {
+        this.enemyTimer(9);
     }
     //双刀
     loadSchedule10(data) {
@@ -492,11 +580,11 @@ export default class GameMain extends cc.Component {
                 time = Math.floor(this.enemyTime10);
             }
         }
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule10(data);
-        }, time);
+        this.unschedule(this.enemyTimer10);
+        this.schedule(this.enemyTimer10, time);
+    }
+    enemyTimer10() {
+        this.enemyTimer(10);
     }
     //绿皮
     loadSchedule11(data) {
@@ -510,11 +598,11 @@ export default class GameMain extends cc.Component {
                 time = Math.floor(this.enemyTime11);
             }
         }
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule11(data);
-        }, time);
+        this.unschedule(this.enemyTimer11);
+        this.schedule(this.enemyTimer11, time);
+    }
+    enemyTimer11() {
+        this.enemyTimer(11);
     }
     loadSchedule12(data) {
         let time = data.finalTime;
@@ -527,11 +615,11 @@ export default class GameMain extends cc.Component {
                 time = Math.floor(this.enemyTime12);
             }
         }
-        this.scheduleOnce(() => {
-            if (GameMag.Ins.gamePause || GameMag.Ins.gameOver) return;
-            this.loadEnemy(data.id);
-            this.loadSchedule12(data);
-        }, time);
+        this.unschedule(this.enemyTimer12);
+        this.schedule(this.enemyTimer12, time);
+    }
+    enemyTimer12() {
+        this.enemyTimer(12);
     }
     //加载枪支列表
     loadGunList() {
@@ -565,12 +653,12 @@ export default class GameMain extends cc.Component {
                 const useingGun = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;
                 for (let i = 0, len = self.gunList.length; i < len; i++) {
                     if (useingGun == self.gunList[i]) { //最近使用的那把有在装备列表
-                        cc.director.emit("showGunActive" + i, i);
+                        cc.director.emit("showGunActive" + i, i, self.gunList[i]);
                         break;
                     }
                     if (i == len - 1) { //最近使用的那把没有在装备列表,直接指定第一把
                         GameMag.Ins.updateUseingDataByGun(self.gunList[0]);
-                        cc.director.emit("showGunActive0", 0);
+                        cc.director.emit("showGunActive0", 0, self.gunList[0]);
                     }
                 }
             }
@@ -864,7 +952,7 @@ export default class GameMain extends cc.Component {
         }, 1);
         this.showEnemy();
         this.roleStay();
-        this.useAssistMissile(1);
+        this.useAssistMissile(3);
         const missionData = GameMag.Ins.missionData;
         this.defenseNum = missionData.defenseNum;
         GameMag.Ins.defenseOver = false;
@@ -898,7 +986,7 @@ export default class GameMain extends cc.Component {
     //使用机甲
     onShowMecha() {
         AudioMag.getInstance().playSound("按钮音");
-        if (this.mecha || this.mecheShowTime) return;
+        if (this.mechaNode || this.mecheShowTime) return;
         const mechaData = GameMag.Ins.mechaData;
         const id = GameMag.Ins.useingData.mecha;
         for (let index = 0; index < mechaData.length; index++) {
@@ -907,9 +995,11 @@ export default class GameMain extends cc.Component {
                 console.log("加载机甲");
                 this.mecheShowTime = true;
                 const mechaCigData = ConfigMag.Ins.getMechaData()[index];
+                console.log(mechaCigData);
                 this.mecheTime = mechaCigData.keepTime;
                 this.mecheCountTime = mechaCigData.keepTime;
-                this.mecheSpeed = mechaCigData.speed * 40;
+                // this.mechaSpeed = mechaCigData.speed * 40;
+                this.mechaSpeed = mechaCigData.speed;
                 let node = this.mechaBox.getChildByName("getNum");
                 let num = Number(node.getComponent(cc.Label).string);
                 num--;
@@ -925,7 +1015,7 @@ export default class GameMain extends cc.Component {
         let self = this;
         ToolsMag.Ins.getHomeResource("prefab/mecha/mecha" + mechaID, function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
-            self.mecha = node;
+            self.mechaNode = node;
             node.parent = self.role;
             node.scaleX = self.roleSkin.scaleX;
             cc.tween(node)
@@ -938,7 +1028,7 @@ export default class GameMain extends cc.Component {
                     self.roleSkin.active = false;
                     self.roleFoot.active = false;
                     self.mechaBox.getChildByName("buffer").active = true;
-                    self.mecha.getChildByName("test").active = false;//伤害区域
+                    self.mechaNode.getChildByName("test").active = false;//下落时候的伤害区域
                     self.schedule(self.mechaShowTimeCb, 1);//不能放回调里面进行,不然有概率会被remove
                     self.switchMechaAction(mechaAnimate.ShopUp, 1, function () {
                         if (self.isMoving()) {
@@ -962,23 +1052,21 @@ export default class GameMain extends cc.Component {
             this.hideMecha();
         }
     }
-    /**
-     * 机甲消失
-     */
+    //机甲消失
     hideMecha() {
         this.showBlastSmoke();
         GameMag.Ins.isUseingMecha = false;
         cc.director.emit("useingMecha", false);
         this.mechaBox.getChildByName("buffer").active = false;
-        this.mecha.getChildByName("test").active = true;
+        this.mechaNode.getChildByName("test").active = true;
         this.unschedule(this.mechaShowTimeCb);
         this.roleSkin.active = true;
         this.roleFoot.active = true;
         this.scheduleOnce(() => {
-            this.mecha.removeFromParent();
-            this.mecha = null;
+            this.mechaNode.removeFromParent();
+            this.mechaNode = null;
             this.mecheCountTime = null;
-            this.mecheSpeed = null;
+            this.mechaSpeed = null;
             if (this.isMoving()) {
                 this.roleWalk()
             } else {
@@ -987,29 +1075,82 @@ export default class GameMain extends cc.Component {
         }, 0);
     }
     //切换机甲龙骨
-    switchMechaAction(name, times, cb: Function = null) {
+    switchMechaAction(action, times, cb: Function = null) {
+        console.log(action);
         let self = this;
-        const skin = GameMag.Ins.trySkin || GameMag.Ins.useingData.skin;
-        let body = this.mecha.getChildByName("body");
-        let lowNode = body.getChildByName("low");
-        let inNode = body.getChildByName("in");//身体
-        let upNode = body.getChildByName("up");
-        if (name == mechaAnimate.WalkFire) {
-            ToolsMag.Ins.playDragonBone(inNode, name, times, function () {
-                if (self.isMoving()) {
-                    ToolsMag.Ins.playDragonBone(inNode, mechaAnimate.Walk, 0, null);
-                } else {
-                    self.roleStay();
-                }
-            });
+        let body = this.mechaNode.getChildByName("body");
+        if (this.isRobotMecha()) {
+            const parts = body.children;
+            if (action == mechaAnimate.WalkFire) {
+                this.robotMechaAction(parts, action, times, function () {
+                    if (self.isMoving()) {
+                        if (self.isRobotMecha()) {
+                            self.mecheAttacking = false;
+                        }
+                        self.robotMechaAction(parts, mechaAnimate.Walk, 0);
+                    } else {
+                        self.roleStay();
+                    }
+                });
+                return;
+            }
+            this.robotMechaAction(parts, action, times, cb);
             return;
         }
-        GameMag.Ins.loadDisplayIndex(["lead"], inNode.getComponent(dragonBones.ArmatureDisplay), skin);//切换机甲上的头
-        ToolsMag.Ins.playDragonBone(lowNode, name, times, null);
-        ToolsMag.Ins.playDragonBone(inNode, name, times, function () {
+        const useMecha = GameMag.Ins.useingData.mecha;
+        let lowNode = null, inNode = null, upNode = null;
+        const skin = GameMag.Ins.trySkin || GameMag.Ins.useingData.skin;
+        if (useMecha == 0 || useMecha == 1 || useMecha == 4) {
+            lowNode = body.getChildByName("low");
+            inNode = body.getChildByName("in");//身体
+            upNode = body.getChildByName("up");
+            GameMag.Ins.loadDisplayIndex(["lead"], inNode.getComponent(dragonBones.ArmatureDisplay), skin);//切换机甲上的头
+            ToolsMag.Ins.playDragonBone(lowNode, action, times, null);
+            ToolsMag.Ins.playDragonBone(upNode, action, times, null);
+            if (action == mechaAnimate.WalkFire) {
+                ToolsMag.Ins.playDragonBone(inNode, action, times, function () {
+                    if (self.isMoving()) {
+                        ToolsMag.Ins.playDragonBone(inNode, mechaAnimate.Walk, 0, null);
+                    } else {
+                        self.roleStay();
+                    }
+                });
+                return;
+            }
+            ToolsMag.Ins.playDragonBone(inNode, action, times, function () {
+                cb && cb();
+            }.bind(this));
+        } else {
+            lowNode = body.getChildByName("low");
+            upNode = body.getChildByName("up");
+            GameMag.Ins.loadDisplayIndex(["lead"], lowNode.getComponent(dragonBones.ArmatureDisplay), skin);//切换机甲上的头
+            ToolsMag.Ins.playDragonBone(lowNode, action, times, null);
+            if (action == mechaAnimate.WalkFire) {
+                ToolsMag.Ins.playDragonBone(upNode, action, times, function () {
+                    if (self.isMoving()) {
+                        ToolsMag.Ins.playDragonBone(upNode, mechaAnimate.Walk, 0, null);
+                    } else {
+                        self.roleStay();
+                    }
+                });
+                return;
+            }
+            ToolsMag.Ins.playDragonBone(upNode, action, times, function () {
+                cb && cb();
+            }.bind(this));
+        }
+    }
+    robotMechaAction(parts: cc.Node[], action: string, times: number, cb: Function = null) {
+        ToolsMag.Ins.playDragonBone(parts[0], action, times, null);
+        ToolsMag.Ins.playDragonBone(parts[1], action, times, null);
+        ToolsMag.Ins.playDragonBone(parts[2], action, times, null);
+        ToolsMag.Ins.playDragonBone(parts[3], action, times, null);
+        ToolsMag.Ins.playDragonBone(parts[4], action, times, function () {
             cb && cb();
-        }.bind(this));
-        ToolsMag.Ins.playDragonBone(upNode, name, times, null);
+        });
+    }
+    otherMechaAction(body: cc.Node, head: cc.Node) {
+
     }
     onKeyDown(event) {
         switch (event.keyCode) {
@@ -1051,7 +1192,7 @@ export default class GameMain extends cc.Component {
      * @param actionFlag number stay:0  fire:1  walk:2  walkFire:3  die:4
      */
     freshRole(actionFlag, times: number, cb: Function = null) {
-        if (this.mecha) return;
+        if (this.mechaNode) return;
         const res = ConfigMag.Ins.roleAnimate();
         // console.log(res);
         let action: string = null;
@@ -1100,7 +1241,10 @@ export default class GameMain extends cc.Component {
     }
     //行走
     roleWalk() {
-        if (this.mecha) {
+        if (this.mechaNode) {
+            if (this.isRobotMecha()) {
+                this.mecheAttacking = false;
+            }
             this.switchMechaAction(mechaAnimate.Walk, 0);
             return;
         }
@@ -1109,7 +1253,10 @@ export default class GameMain extends cc.Component {
     }
     //待机
     roleStay() {
-        if (this.mecha) {
+        if (this.mechaNode) {
+            if (this.isRobotMecha()) {
+                this.mecheAttacking = false;
+            }
             this.switchMechaAction(mechaAnimate.Stay, 0);
             return;
         }
@@ -1121,13 +1268,22 @@ export default class GameMain extends cc.Component {
         let animate = null;
         let self = this;
         let flag: number = null;
-        if (this.mecha) {
+        if (this.mechaNode) {
             if (this.isMoving()) {
                 animate = mechaAnimate.WalkFire;
             } else {
                 animate = mechaAnimate.Fire;
             }
-            this.switchMechaAction(animate, 1);
+            if (this.isRobotMecha()) {
+                this.mecheAttacking = true;
+            }
+            this.switchMechaAction(animate, 1, function () {
+                if (self.isMoving()) {
+                    self.roleWalk();
+                } else {
+                    self.roleStay();
+                }
+            });
             return;
         }
         if (this.isMoving()) {
@@ -1164,6 +1320,9 @@ export default class GameMain extends cc.Component {
         if (this.isMoving) {
             this.roleWalk();
         }
+        if (this.mechaNode && this.mechaNode.scale == 1 && this.isRobotMecha()) {
+            this.mechaNode.getChildByName("attack").active = false;
+        }
         return true;
     }
     onMoveLeftEnd() {
@@ -1184,6 +1343,9 @@ export default class GameMain extends cc.Component {
         this.moveRight = true;
         if (this.isMoving) {
             this.roleWalk();
+        }
+        if (this.mechaNode && this.mechaNode.scale == -1 && this.isRobotMecha()) {
+            this.mechaNode.getChildByName("attack").active = false;
         }
         return true;
     }
@@ -1278,12 +1440,12 @@ export default class GameMain extends cc.Component {
         this.showShine();
         const target = this.assistStatus.node;
         target.active = true;
-        if (this.mecha) {
+        if (this.mechaNode) {
             target.y = 260;
         } else {
             target.y = 185;
         }
-        this.assistStatus.spriteFrame = this.gameAtlas.getSpriteFrame("status_" + type);
+        this.assistStatus.spriteFrame = this.gameMainAtlas.getSpriteFrame("status_" + type);
         if (type == 2) {
             GameMag.Ins.useAttackAssist = effectNum;
         } else if (type == 3) {
@@ -1317,15 +1479,16 @@ export default class GameMain extends cc.Component {
     }
     //实时更新主角朝向
     moveDir(dir: number) {
-        if (this.mecha) {
-            this.mecha.scaleX = dir;
+        if (this.mechaNode) {
+            this.mechaNode.scaleX = dir;
         }
         this.roleSkin.scaleX = dir;
         this.roleFoot.scaleX = dir;
     }
     update(dt) {
         if (GameMag.Ins.gameOver || GameMag.Ins.gamePause || this.mecheShowTime) return;
-        let speed = this.mecheSpeed ? this.mecheSpeed : this.moveSpeed;
+        // let speed = this.mechaSpeed ? this.mechaSpeed : this.moveSpeed;
+        let speed = this.moveSpeed;
         if (this.assistSpeed) {
             speed += speed * this.assistSpeed / 100;
         }
@@ -1337,20 +1500,19 @@ export default class GameMain extends cc.Component {
             this.role.x += dt * speed;
             this.moveDir(1);
         }
-        let babyX = this.babyNode.x;
-        const diff = this.role.x - babyX; //主角和baby之间的距离
-        if (diff > this.initBabyDiff) {
-            this.babyNode.x += dt * this.babyMoveSpeed;
-        } else if (diff < -this.initBabyDiff) {
-            this.babyNode.x -= dt * this.babyMoveSpeed;
-        }
         if (this.taskIndex == 2 || this.taskIndex == 5 || this.taskIndex == 8 || this.taskIndex == 9) {
             this.updateDistance();
         }
         this.roleCamera.x = cc.misc.clampf(this.role.x, 0, this.bgBox.width - 1300 - 500);
     }
-    //发射速率
+    //控制发射速率,含机甲
     checkAttackTime() {
+        if (this.mechaNode) {
+            if (this.isRobotMecha() && this.mecheAttacking) {
+                return false;
+            }
+            return true;
+        }
         let gunID = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;
         let info = ConfigMag.Ins.getGunData()[gunID];
         let diff = 1 / info.speed * 1000;
@@ -1401,7 +1563,7 @@ export default class GameMain extends cc.Component {
         let status = this.checkAttackTime();
         if (!status) return true;
         this.unschedule(this.fire);
-        if (this.mecha) {//机甲存在的时候不消耗子弹
+        if (this.mechaNode) {//机甲存在的时候不消耗子弹
             this.roleFire();
             this.showMechaBullet();
             return true;
@@ -1425,16 +1587,34 @@ export default class GameMain extends cc.Component {
         this.attackBtn.scale = 1;
         this.unschedule(this.fire);
     }
-    //显示机甲子弹
+    isRobotMecha(): boolean {
+        const useMecha = GameMag.Ins.useingData.mecha;
+        if ((useMecha == 2 || useMecha == 3 || useMecha == 5) && this.mechaNode) {
+            return true;
+        }
+        return false;
+    }
+    //显示发射机甲子弹
     showMechaBullet() {
+        if (this.isRobotMecha()) {
+            this.mechaNode.getChildByName("attack").active = true;
+            this.unschedule(this.hideMechaAttack);
+            this.scheduleOnce(this.hideMechaAttack, 2.5);
+            return;
+        }
         let self = this;
         GameMag.Ins.getMechaBullet(function (mechaBullet) {
             mechaBullet.parent = self.bulletBox;
             mechaBullet.setPosition(self.role.x, -50);
-            const dir = self.mecha.scaleX;
+            const dir = self.mechaNode.scaleX;
             mechaBullet.getComponent("mechaBullet").init(dir);
             self.showFireShells(dir);
         }.bind(this));
+    }
+    hideMechaAttack() {
+        if (this.mechaNode) {
+            this.mechaNode.getChildByName("attack").active = false;
+        }
     }
     //显示枪子弹
     showBullet(useGun) {
@@ -1493,7 +1673,7 @@ export default class GameMain extends cc.Component {
      */
     showFireShells(dir) {
         let shellsNode = null;//蛋壳
-        let shellsIndex: number = null;
+        let shellsIndex: number = null;//蛋壳的样式
         let ps: cc.Vec2 = null;
         let dis: number = null; //蛋壳飞出去的距离
         if (this.bulletShellsPool.size() > 0) {
@@ -1501,7 +1681,7 @@ export default class GameMain extends cc.Component {
         } else {
             shellsNode = cc.instantiate(this.bulletShellsPre);
         }
-        if (this.mecha) {
+        if (this.mechaNode) {
             switch (GameMag.Ins.useingData.mecha) {
                 case 0:
                     AudioMag.getInstance().playSound("机甲");
@@ -1509,14 +1689,19 @@ export default class GameMain extends cc.Component {
                     ps = cc.v2(0, -60);
                     break;
                 case 1:
-                    AudioMag.getInstance().playSound("机甲");
+                    AudioMag.getInstance().playSound("RPG");
                     shellsIndex = 0;
                     ps = cc.v2(0, 40);
                     break;
-                case 2:
+                case 4:
                     AudioMag.getInstance().playSound("RPG");
                     shellsIndex = 2;
                     ps = cc.v2(0, -60);
+                    break;
+                case 6:
+                    AudioMag.getInstance().playSound("RPG");
+                    shellsIndex = 2;
+                    ps = cc.v2(0, 0);
                     break;
                 default:
                     break;
@@ -1550,7 +1735,8 @@ export default class GameMain extends cc.Component {
                 this.bulletShellsPool.put(shellsNode);
             })
             .start();
-    }/**
+    }
+    /**
      * 武器切换
      */
     onSwitchGun() {
@@ -1564,8 +1750,24 @@ export default class GameMain extends cc.Component {
      * @param index 当前武器在装备列表的下标位置
      */
     gunListIndex: number = null;
-    freshRoleGun(index) {
+    freshRoleGun(index, gunID) {
         this.gunListIndex = index;
+        // const gunData = ConfigMag.Ins.getGunData()[gunID];
+        // //是否显示长按连击UI
+        // if (gunData.gunDescType === 3) { //全自动武器
+        //     this.longPressTip.active = true;
+        //     const ac = cc.blink(4, 4);
+        //     cc.tween(this.longPressTip)
+        //         .then(ac)
+        //         .call(() => {
+        //             this.longPressTip.active = false;
+        //             this.longPressTip.stopAllActions();
+        //         })
+        //         .start();
+        // } else {
+        //     this.longPressTip.active = false;
+        //     this.longPressTip.stopAllActions();
+        // }
         this.freshRole(0, 0);
         if (!this.moveLeft && !this.moveRight) {
             this.freshFootDragon("stay");
