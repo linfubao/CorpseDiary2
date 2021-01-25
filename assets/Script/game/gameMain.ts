@@ -207,6 +207,7 @@ export default class GameMain extends cc.Component {
         this.roleFoot = this.role.getChildByName("foot");
         let useingData = GameMag.Ins.useingData;
         this.headImg.spriteFrame = this.shopAtlas.getSpriteFrame("skinIcon_" + useingData.skin);
+        this.roleCamera.width = cc.view.getVisibleSize().width;
         this.initPoos();
         this.initTask();
         this.initBackground();
@@ -315,7 +316,10 @@ export default class GameMain extends cc.Component {
         }
     }
     showEnemy() {
-        // return
+        // this.loadEnemy(0);
+        // this.loadEnemy(1);
+        // this.loadEnemy(2);
+        return
         const level = GameMag.Ins.level;
         const enemyData = ConfigMag.Ins.getEnemyData();
         this.enemyData = enemyData;
@@ -337,7 +341,7 @@ export default class GameMain extends cc.Component {
         this.loadSchedule1(enemyData[1]);
         // if (GameMag.Ins.switchData && !GameMag.Ins.switchData.blood) return; //绿色模式不出下面的怪
         this.loadSchedule2(enemyData[2]);
-        if (level < 5) return;
+        // if (level < 5) return;
         this.loadSchedule3(enemyData[3]);
         this.loadSchedule4(enemyData[4]);
         this.loadSchedule5(enemyData[5]);
@@ -922,6 +926,45 @@ export default class GameMain extends cc.Component {
             })
         })
     }
+    /**
+     * 吃了或使用辅助道具
+     * @param type 1:增加防御status_1; 2:增加攻击status_2; 3:增加速度status_3
+     * @param effectNum  增加数值
+     * @param assistTime  持续时间
+     */
+    useAssist(type, effectNum, assistTime) {
+        this.showShine();
+        const target = this.assistStatus.node;
+        target.active = true;
+        if (this.mechaNode) {
+            target.y = 260;
+        } else {
+            target.y = 185;
+        }
+        this.assistStatus.spriteFrame = this.gameMainAtlas.getSpriteFrame("status_" + type);
+        if (type == 2) {
+            GameMag.Ins.useAttackAssist = effectNum;
+        } else if (type == 3) {
+            this.assistSpeed = effectNum;
+        }
+        let action = cc.sequence(
+            cc.scaleTo(0.3, 1.1),
+            cc.scaleTo(0.3, 1)
+        ).repeat(60);
+        target.stopAllActions();
+        cc.tween(target)
+            .then(action)
+            .start();
+        this.scheduleOnce(() => {
+            target.stopAllActions();
+            if (type == 2) {
+                GameMag.Ins.useAttackAssist = 0;
+            } else {
+                this.assistSpeed = null;
+            }
+            target.active = false;
+        }, assistTime);
+    }
     //天降导弹
     useAssistMissile(size) {
         // console.log("导弹的size", size);
@@ -1429,45 +1472,6 @@ export default class GameMain extends cc.Component {
                 })
                 .start();
         }
-    }
-    /**
-     * 吃了或使用辅助道具
-     * @param type 1:增加防御status_1; 2:增加攻击status_2; 3:增加速度status_3
-     * @param effectNum  增加数值
-     * @param assistTime  持续时间
-     */
-    useAssist(type, effectNum, assistTime) {
-        this.showShine();
-        const target = this.assistStatus.node;
-        target.active = true;
-        if (this.mechaNode) {
-            target.y = 260;
-        } else {
-            target.y = 185;
-        }
-        this.assistStatus.spriteFrame = this.gameMainAtlas.getSpriteFrame("status_" + type);
-        if (type == 2) {
-            GameMag.Ins.useAttackAssist = effectNum;
-        } else if (type == 3) {
-            this.assistSpeed = effectNum;
-        }
-        let action = cc.sequence(
-            cc.scaleTo(0.3, 1.1),
-            cc.scaleTo(0.3, 1)
-        ).repeat(60);
-        target.stopAllActions();
-        cc.tween(target)
-            .then(action)
-            .start();
-        this.scheduleOnce(() => {
-            target.stopAllActions();
-            if (type == 2) {
-                GameMag.Ins.useAttackAssist = 0;
-            } else {
-                this.assistSpeed = null;
-            }
-            target.active = false;
-        }, assistTime);
     }
     //闪耀
     showShine() {

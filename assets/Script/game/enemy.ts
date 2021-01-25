@@ -189,6 +189,15 @@ export default class Enemy extends cc.Component {
                     this.attack();
                 }
                 break;
+            case 22://辅助道具机枪的爆炸区域
+                const num1 = Number(ConfigMag.Ins.getAssistData()[9].effectNum);
+                this.hurted(num1);
+                break;
+            case 24://辅助道具机枪的子弹
+                GameMag.Ins.putMachineBullet(other.node);
+                const num2 = Number(ConfigMag.Ins.getAssistData()[9].effectNum);
+                this.hurted(num2);
+                break;
             default:
                 break;
         }

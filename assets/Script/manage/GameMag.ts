@@ -1099,6 +1099,32 @@ export default class GameMag extends cc.Component {
     putMechaBullet(node) {
         this.mechaBulletPool.put(node);
     }
+    machineBulletPool: cc.NodePool = null;//机枪的子弹
+    initMachineBullet() {
+        let self = this;
+        this.machineBulletPool = new cc.NodePool();
+        ToolsMag.Ins.getGameResource("prefab/bullets/machineBullet", function (prefab: cc.Prefab) {
+            let node = cc.instantiate(prefab);
+            for (let i = 0; i < 10; i++) {
+                self.machineBulletPool.put(node);
+            }
+        })
+    }
+    getMachineBullet(cb: Function) {
+        let node = null;
+        if (this.machineBulletPool.size() > 0) {
+            node = this.machineBulletPool.get();
+            cb && cb(node);
+            return;
+        }
+        ToolsMag.Ins.getGameResource("prefab/bullets/machineBullet", function (prefab: cc.Prefab) {
+            node = cc.instantiate(prefab);
+            cb && cb(node);
+        })
+    }
+    putMachineBullet(node) {
+        this.machineBulletPool.put(node);
+    }
 }
 /**
  * other tag
@@ -1122,4 +1148,7 @@ export default class GameMag extends cc.Component {
  * 19. 防御区域(旋涡)
  * 20. 要护送的小弟身体,我叫他baby
  * 21. 游戏中出现的钥匙(钥匙任务的钥匙)
+ * 22. 辅助道具机枪的爆炸区域
+ * 23. 辅助道具机枪的碰撞检测区域
+ * 24. 辅助道具机枪的子弹
  */

@@ -104,6 +104,14 @@ export default class gameAssistItem extends cc.Component {
             case 4://导弹
                 cc.director.emit("useAssistMissile", 3);
                 break;
+            case 5://机枪
+                // cc.director.emit("useAssistMachineGun", assistTime);
+                ToolsMag.Ins.getGameResource("prefab/machineGun", function (res: cc.Prefab) {
+                    let machineGun = cc.instantiate(res);
+                    machineGun.parent = cc.find("Canvas");
+                    machineGun.getComponent("machineGun").init(assistTime);
+                })
+                break;
             default:
                 break;
         }
