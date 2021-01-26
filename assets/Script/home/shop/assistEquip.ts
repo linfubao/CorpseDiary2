@@ -22,7 +22,7 @@ export default class AssistEquip extends cc.Component {
         this.icon.spriteFrame = sf;
         if (equipID != -2) {
             const assistData = GameMag.Ins.assistData[equipID];
-            this.getNumLab.string = String("X" + assistData.getNum);
+            this.getNumLab.string = String("x" + assistData.getNum);
         }
         cc.director.on("upAssistEquip" + this.index, this.upAssistEquip, this);
         cc.director.on("downAssistEquip" + this.index, this.downAssistEquip, this);

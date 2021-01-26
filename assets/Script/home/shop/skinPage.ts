@@ -113,8 +113,7 @@ export default class SkinPage extends cc.Component {
     showUpgradeModal() {
         const modal = this.upgradeModal;
         modal.active = true;
-        modal.getComponent("upgradeModal").init(this.clickFlag);
-        modal.parent = this.node;
+        modal.getComponent("skinUpgradeModal").init(this.clickFlag);
     }
     onTrySkin() {
         console.log(this.clickFlag);
@@ -376,7 +375,7 @@ export default class SkinPage extends cc.Component {
         this.putBlock(this.speedNode);
         this.putBlock(this.armorNode);
         this.unschedule(this.showSkillBlock);
-        this.scheduleOnce(this.showSkillBlock, 0.3);
+        this.scheduleOnce(this.showSkillBlock, 0.3);//为了防止暴力操作导致回收不及时
     }
     showSkillBlock() {
         this.loadBlood();

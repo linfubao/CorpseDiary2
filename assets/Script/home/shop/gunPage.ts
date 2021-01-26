@@ -43,28 +43,45 @@ export default class GunPage extends cc.Component {
     equipBtn: cc.Node = null;
     @property({ type: cc.Node, tooltip: "解除装备" })
     unequipBtn: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "升级装备" })
+    upgradeBtn: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "升级界面" })
+    upgradeModal: cc.Node = null;
     @property(cc.Node)
     equipBox: cc.Node = null;
     @property({ type: cc.Label, tooltip: "解锁条件" })
     lockText: cc.Label = null;
+
     @property(cc.Node)
     powerNode: cc.Node = null;
     @property(cc.Node)
     speedNode: cc.Node = null;
-    @property(cc.Prefab)
-    singlePre: cc.Prefab = null;
+    @property(cc.Node)
+    critNode: cc.Node = null;
 
     index: number = 0;
     equipIndex: number = 0;
     len: number = 0;
     equipLen: number = 0;
     gunData: any[] = [];
+    gunCigData: any[] = [];
     equipData: any[] = [];
     clickFlag: number = 0;//当前点击的是哪个武器,代表gunID
     pool: cc.NodePool = null;
+
     skillConfig: number[] = [];
-    speedCount: number = 0;
     powerCount: number = 0;
+    speedCount: number = 0;
+    critCount: number = 0;
+    powerMaxCount: number = 0;
+    speedMaxCount: number = 0;
+    critMaxCount: number = 0;
+    powerUpMaxCount: number = 0;
+    speedUpMaxCount: number = 0;
+    critUpMaxCount: number = 0;
+    powerUpCount: number = 0;
+    speedUpCount: number = 0;
+    critUpCount: number = 0;
 
     onLoad() {
         this.initUI();
@@ -75,35 +92,32 @@ export default class GunPage extends cc.Component {
         this.buyGunBtn.on(cc.Node.EventType.TOUCH_END, this.onBuyGunBtn, this);
         this.equipBtn.on(cc.Node.EventType.TOUCH_END, this.onEquipBtn, this);
         this.unequipBtn.on(cc.Node.EventType.TOUCH_END, this.onUnequipBtn, this);
+        this.upgradeBtn.on(cc.Node.EventType.TOUCH_END, function () {
+            const modal = this.upgradeModal;
+            modal.active = true;
+            modal.getComponent("gunUpgradeModal").init(this.clickFlag);
+        }, this);
     }
     initUI() {
         this.skillConfig = GameMag.Ins.skillConfig;
-        this.gunData = ConfigMag.Ins.getGunData();
-        this.len = this.gunData.length;
+        this.gunData = GameMag.Ins.gunData;
+        this.gunCigData = ConfigMag.Ins.getGunData();
+        this.len = this.gunCigData.length;
         this.equipData = GameMag.Ins.useingData.gunEquip;
         this.equipLen = this.equipData.length;
         this.loadItem();
         this.loadEquipItem();
-        this.pool = new cc.NodePool();
-        for (let i = 0; i < 35; i++) {
-            let node = cc.instantiate(this.singlePre);
-            this.pool.put(node);
-        }
     }
     scrollTo() {
-        // if (GameMag.Ins.scrollToGun === null) {
-        //     return;
+        // const gun = GameMag.Ins.useingData.gun;
+        // let index = null;
+        // if (gun >= 22) {
+        //     index = 0;
+        // } else {
+        //     index = (1 - gun * 0.04).toFixed(2);
         // }
-        // let index = 1 - GameMag.Ins.scrollToGun * 0.045;
-        // this.scrollView.scrollTo(cc.v2(0, index), 0, true);
-        const gun = GameMag.Ins.useingData.gun;
-        let index = null;
-        if (gun >= 22) {
-            index = 0;
-        } else {
-            index = (1 - gun * 0.04).toFixed(2);
-        }
-        this.scrollView.scrollTo(cc.v2(0, Number(index)), 0, true);
+        // this.scrollView.scrollTo(cc.v2(0, Number(index)), 0, true);
+        this.scrollView.scrollTo(cc.v2(0, 0.8), 0, true);
     }
     //动态加载装备中的武器列表
     loadEquipItem() {
@@ -111,9 +125,7 @@ export default class GunPage extends cc.Component {
         ToolsMag.Ins.getHomeResource("prefab/shop/gunEquip", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
             let gunID = self.equipData[self.equipIndex];
-            let lv = 0;
-            let sf = self.homeAtlas.getSpriteFrame("gunName_" + gunID);
-            node.getComponent("gunEquip").init(gunID, self.equipIndex, sf);
+            node.getComponent("gunEquip").init(gunID, self.equipIndex);
             node.parent = self.equipBox;
             self.equipIndex++;
             if (self.equipIndex < self.equipLen) {
@@ -125,7 +137,7 @@ export default class GunPage extends cc.Component {
     onAddBulletBtn() {
         console.log("购买子弹");
         AudioMag.getInstance().playSound("购买子弹");
-        let data = this.gunData[this.clickFlag];
+        let data = this.gunCigData[this.clickFlag];
         let coin = GameMag.Ins.currency.coin;
         if (coin < data.buyOnceCost) {
             DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["金币不足"]);
@@ -136,13 +148,13 @@ export default class GunPage extends cc.Component {
         let localData = GameMag.Ins.gunData[this.clickFlag];
         this.bulletNumLab.string = String(`${localData.bulletNum}`);
         cc.director.emit("updateCurrency");
-        this.freshGunPageUI(data);
+        this.freshDownContent();
     }
     //解锁
     onUnlockBtn() {
         AudioMag.getInstance().playSound("按钮音");
-        let data = this.gunData[this.clickFlag];
-        // console.log("解锁", data);
+        let data = this.gunCigData[this.clickFlag];
+        console.log("解锁", data);
         let unlockLevel = data.unlockLevel;
         let unlockDiamond = data.unlockDiamond;
         let lv = GameMag.Ins.level;
@@ -154,7 +166,8 @@ export default class GunPage extends cc.Component {
             cc.director.emit("updateCurrency");
             this.unlockSuccess();
         } else {
-            DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["sorry,未达成解锁条件"]);
+            // DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["sorry,未达成解锁条件"]);
+            cc.director.emit("shopCoinPage");
         }
     }
     //解锁成功
@@ -168,11 +181,11 @@ export default class GunPage extends cc.Component {
     onBuyGunBtn() {
         console.log("购买武器");
         AudioMag.getInstance().playSound("按钮音");
-        const data = this.gunData[this.clickFlag];
+        const data = this.gunCigData[this.clickFlag];
+        // console.log(data);
         let costNum = data.costNum;
         let currency = GameMag.Ins.currency;
         if (data.buyType === 0 && (currency.coin < costNum)) {
-            // DialogMag.Ins.show(DialogPath.MessageDialog, DialogScript.MessageDialog, ["金币不足"]);
             cc.director.emit("shopCoinPage");
             return;
         }
@@ -211,16 +224,24 @@ export default class GunPage extends cc.Component {
         console.log("装备");
         AudioMag.getInstance().playSound("按钮音");
         let equipData = GameMag.Ins.useingData.gunEquip;
-        let equipBoxArr = this.equipBox.children;
-        for (let i = 0; i < equipData.length; i++) {
-            let flag = this.searchEquipData();
-            if (equipData[i] < 0 && !flag) {
-                let itemShow = equipBoxArr[i].getChildByName("show");
-                itemShow.active = true;
-                let sf = this.homeAtlas.getSpriteFrame("gun_" + this.clickFlag);
-                itemShow.getChildByName("icon").getComponent(cc.Sprite).spriteFrame = sf;
-                GameMag.Ins.updateUseingDataByGunEquip(this.clickFlag, i);
-            }
+        // let equipBoxArr = this.equipBox.children;
+        // for (let i = 0; i < equipData.length; i++) {
+        //     let flag = this.searchEquipData();
+        //     if (equipData[i] < 0 && !flag) {
+        //         let itemShow = equipBoxArr[i].getChildByName("show");
+        //         itemShow.active = true;
+        //         let sf = this.homeAtlas.getSpriteFrame("gun_" + this.clickFlag);
+        //         itemShow.getChildByName("icon").getComponent(cc.Sprite).spriteFrame = sf;
+        //         GameMag.Ins.updateUseingDataByGunEquip(this.clickFlag, i);
+        //     }
+        // }
+        let equipIndex = equipData.indexOf(-2);
+        let isEquip = equipData.indexOf(this.clickFlag);
+        // console.log(equipIndex, isEquip);
+        if (equipIndex < 0) {//没有空位了
+            console.log("没有空位了");
+        } else {
+            cc.director.emit("upGunEquip" + equipIndex, this.clickFlag);
         }
         this.freshEquipBtns();
     }
@@ -229,33 +250,35 @@ export default class GunPage extends cc.Component {
         console.log("解除装备");
         AudioMag.getInstance().playSound("按钮音");
         let equipData = GameMag.Ins.useingData.gunEquip;
-        for (let i = 0; i < equipData.length; i++) {
-            if (equipData[i] == this.clickFlag) {
-                let showNode = this.equipBox.children[i].getChildByName("show");
-                let iconNode = showNode.getChildByName("icon");
-                cc.tween(iconNode)
-                    .to(0.2, { scale: 1.2 })
-                    .to(0.2, { scale: 0 })
-                    .call((node) => {
-                        showNode.active = false;
-                        node.scale = 1;
-                        GameMag.Ins.updateUseingDataByGunEquip(-1, i);
-                        this.freshEquipBtns();
-                    })
-                    .start();
-                break;
-            }
-        }
+        let equipIndex = equipData.indexOf(this.clickFlag);
+        console.log(equipIndex);
+        cc.director.emit("downGunEquip" + equipIndex, this.clickFlag);
+        this.freshEquipBtns();
+        // for (let i = 0; i < equipData.length; i++) {
+        //     if (equipData[i] == this.clickFlag) {
+        //         let showNode = this.equipBox.children[i].getChildByName("show");
+        //         let iconNode = showNode.getChildByName("icon");
+        //         cc.tween(iconNode)
+        //             .to(0.2, { scale: 1.2 })
+        //             .to(0.2, { scale: 0 })
+        //             .call((node) => {
+        //                 showNode.active = false;
+        //                 node.scale = 1;
+        //                 GameMag.Ins.updateUseingDataByGunEquip(-2, i);
+        //                 this.freshEquipBtns();
+        //             })
+        //             .start();
+        //         break;
+        //     }
+        // }
     }
     //动态加载武器列表
     loadItem() {
         let self = this;
         ToolsMag.Ins.getHomeResource("prefab/shop/gunItem", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
-            let lv = 0;
-            let gunSf = self.shopAtlas.getSpriteFrame(`gun_${self.index}_${lv}`);
             let gunNameSf = self.shopAtlas.getSpriteFrame("gunName_" + self.index);
-            node.getComponent("gunItem").init(self.index, self.gunData[self.index], gunSf, gunNameSf);
+            node.getComponent("gunItem").init(self.index, self.gunCigData[self.index], gunNameSf);
             node.parent = self.gunBox;
             self.index++;
             if (self.index < self.len) {
@@ -268,15 +291,14 @@ export default class GunPage extends cc.Component {
         })
     }
     freshGunPageUI(data) {
-        if (this.clickFlag == data.gunID) return;
+        // if (this.clickFlag == data.gunID) return;
         this.clickFlag = data.gunID;
         let localData = GameMag.Ins.gunData[data.gunID];
         // console.log(data, localData);
         this.gunName.spriteFrame = this.shopAtlas.getSpriteFrame("gunName_" + data.gunID);
         this.gunDesc.spriteFrame = this.shopAtlas.getSpriteFrame("gunDesc_" + data.gunDescType);
         let lockStatus = localData.lockStatus;
-        // console.log("lockStatus", lockStatus);
-        this.buyGunBtn.active = !lockStatus;
+        this.buyGunBtn.active = lockStatus;
         this.unlockBtn.active = !lockStatus;
         if (data.unlockLevel != 0 && !lockStatus) {
             this.lockText.node.active = true;
@@ -292,7 +314,7 @@ export default class GunPage extends cc.Component {
      * 更新购买子弹栏
      */
     freshDownContent() {
-        let cigData = this.gunData[this.clickFlag];
+        let cigData = this.gunCigData[this.clickFlag];
         let localData = GameMag.Ins.gunData[this.clickFlag];
         let buyOnceCost = cigData.buyOnceCost;
         let lockStatus = localData.lockStatus;
@@ -341,19 +363,22 @@ export default class GunPage extends cc.Component {
         }
         return flag;
     }
-    //更新购买/装备/解除装备的按钮
+    //更新 强化/购买/装备/解除装备 的按钮
     freshEquipBtns() {
         let localData = GameMag.Ins.gunData[this.clickFlag];
         // console.log(localData);
         if (localData.geted) {
             this.buyGunBtn.active = false;
-            let full = this.checkEquipFull();
-            let flag = this.searchEquipData();
-            if (flag) {
+            this.upgradeBtn.active = true;
+            let equipData = GameMag.Ins.useingData.gunEquip;
+            let isFull = (equipData.indexOf(-2)) < 0 ? true : false;
+            // let flag = this.searchEquipData();
+            let flag = equipData.indexOf(this.clickFlag);
+            if (flag >= 0) {
                 this.unequipBtn.active = true;
                 this.equipBtn.active = false;
             } else {
-                if (full) {
+                if (isFull) {
                     this.unequipBtn.active = false;
                     this.equipBtn.active = false;
                 } else {
@@ -361,72 +386,107 @@ export default class GunPage extends cc.Component {
                     this.equipBtn.active = true;
                 }
             }
+            if (localData.gunLv === 3) { //满级了
+                this.upgradeBtn.active = false;
+            } else {
+                this.upgradeBtn.active = true;
+            }
         } else {
             this.buyGunBtn.active = true;
+            this.upgradeBtn.active = false;
         }
     }
     //加载技能显示块
     loadSkillBlock(data) {
-        return
+        const info = GameMag.Ins.gunData[this.clickFlag];
+        // console.log(data);
         this.powerCount = 0;
         this.speedCount = 0;
-        this.powerNode.destroyAllChildren();
-        this.speedNode.destroyAllChildren();
-        this.scheduleOnce(() => {
-            this.loadPower(data);
-            this.loadSpeed(data);
-        }, 0);
+        this.critCount = 0;
+        this.powerMaxCount = info.power * 2;
+        this.speedMaxCount = info.speed * 2;
+        this.critMaxCount = info.crit * 2;
+        this.putBlock(this.powerNode);
+        this.putBlock(this.speedNode);
+        this.putBlock(this.critNode);
+        this.unschedule(this.showSkillBlock);
+        this.scheduleOnce(this.showSkillBlock, 0.3);
     }
-    //获取技能小格子
-    getSkillNode() {
-        let node = null;
-        if (this.pool.size() > 0) {
-            node = this.pool.get();
-        } else {
-            node = cc.instantiate(this.singlePre);
-        }
-        return node;
+    showSkillBlock() {
+        this.loadPower();
+        this.loadSpeed();
+        this.loadCrit();
     }
-    loadSpeed(data) {
-        let speedNum = data.speed;
-        let node = this.getSkillNode();
-        node.getChildByName("bg").color = cc.color(50, 223, 17);
-        node.parent = this.speedNode;
-        node.scale = 0;
-        cc.tween(node)
-            .to(this.skillConfig[0], { scale: this.skillConfig[1] })
-            .call(() => {
-                this.speedCount++;
-                if (this.speedCount < speedNum) {
-                    this.loadSpeed(data);
-                }
-            })
-            .to(this.skillConfig[2], { scale: 1 })
-            .start();
+    loadPower() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.stopAllActions();
+            node.parent = self.powerNode;
+            node.getChildByName("blue").active = false;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.powerCount++;
+                    if (self.powerCount < self.powerMaxCount) {
+                        self.loadPower();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        });
     }
-    loadPower(data) {
-        let powerNum = data.power;
-        let node = this.getSkillNode();
-        node.getChildByName("bg").color = cc.color(255, 179, 0);
-        node.parent = this.powerNode;
-        node.scale = 0;
-        cc.tween(node)
-            .to(this.skillConfig[0], { scale: this.skillConfig[1] })
-            .call(() => {
-                this.powerCount++;
-                if (this.powerCount < powerNum) {
-                    this.loadPower(data);
-                }
-            })
-            .to(this.skillConfig[2], { scale: 1 })
-            .start();
+    loadSpeed() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.stopAllActions();
+            node.parent = self.speedNode;
+            node.getChildByName("blue").active = false;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.speedCount++;
+                    if (self.speedCount < self.speedMaxCount) {
+                        self.loadSpeed();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        });
+    }
+    loadCrit() {
+        let self = this;
+        GameMag.Ins.getSkillBlock((node) => {
+            node.stopAllActions();
+            node.parent = self.critNode;
+            node.getChildByName("blue").active = false;
+            node.scale = 0;
+            cc.tween(node)
+                .to(self.skillConfig[0], { scale: self.skillConfig[1] })
+                .call(() => {
+                    self.critCount++;
+                    if (self.critCount < self.critMaxCount) {
+                        self.loadCrit();
+                    }
+                })
+                .to(self.skillConfig[2], { scale: 1 })
+                .start();
+        });
+    }
+    //回收
+    putBlock(parentNode: cc.Node) {
+        parentNode.children.forEach(item => {
+            item.getChildByName("blue").active = false;
+            item.stopAllActions();
+            this.scheduleOnce(() => {
+                GameMag.Ins.putSkillBlock(item);
+            }, 0)
+        });
     }
     onDisable() {
-        // this.speedNode.destroyAllChildren();
-        // this.powerNode.destroyAllChildren();
-        // this.powerCount = 0;
-        // this.speedCount = 0;
-        // this.loadPower(this.gunData[this.clickFlag]);
-        // this.loadSpeed(this.gunData[this.clickFlag]);
+        this.putBlock(this.powerNode);
+        this.putBlock(this.speedNode);
+        this.putBlock(this.critNode);
     }
 }

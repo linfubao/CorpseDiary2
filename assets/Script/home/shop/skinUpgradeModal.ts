@@ -3,12 +3,11 @@ import GameMag from "../../manage/GameMag";
 import AudioMag from "../../manage/AudioMag";
 import ToolsMag from "../../manage/ToolsMag";
 import DialogMag, { DialogPath, DialogScript } from "../../manage/DialogMag";
-import gameAssistItem from "../../game/gameAssistItem";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class UpgradeModal extends cc.Component {
+export default class SkinUpgradeModal extends cc.Component {
 
     @property(cc.SpriteAtlas)
     shopAtlas: cc.SpriteAtlas = null;
@@ -95,7 +94,7 @@ export default class UpgradeModal extends cc.Component {
         this.screenWidth = cc.view.getVisibleSize().width;
         this.skillConfig = GameMag.Ins.skillConfig;
         this.ciginfo = ConfigMag.Ins.getSkinData()[index];
-        console.log(this.ciginfo);
+        // console.log(this.ciginfo);
         this.index = index;
         this.initUI();
         this.bloodUpBtn.on(cc.Node.EventType.TOUCH_END, this.onBloodUp, this);

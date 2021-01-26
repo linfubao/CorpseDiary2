@@ -646,7 +646,11 @@ export default class GameMain extends cc.Component {
         ToolsMag.Ins.getGameResource("prefab/gameGunItem", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
             let gunID = self.gunList[self.gunItemIndex];
-            let sp = self.homeAtlas.getSpriteFrame("gun_" + gunID);
+            let gunLv = GameMag.Ins.gunData[gunID].gunLv;
+            if (gunLv === 2) {
+                gunLv = 1;
+            }
+            let sp = self.shopAtlas.getSpriteFrame(`gun_${gunID}_${gunLv}`);
             node.getComponent("gameGunItem").init(gunID, self.gunItemIndex, sp);
             node.parent = self.gunBox;
             self.gunItemIndex++;
@@ -1534,7 +1538,7 @@ export default class GameMain extends cc.Component {
             return true;
         }
         let gunID = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;
-        let info = ConfigMag.Ins.getGunData()[gunID];
+        let info = GameMag.Ins.gunData[gunID];
         let diff = 1 / info.speed * 1000;
         let timer = new Date().getTime();
         // console.log(diff);

@@ -182,7 +182,7 @@ export default class HomeMain extends cc.Component {
         GameMag.Ins.tryGunBullet = null;
         GameMag.Ins.tryGunEquip = null;
         const lv = GameMag.Ins.level;
-        this.levelLab.string = String("第" + lv + "天");
+        this.levelLab.string = String(lv);
         // if (!GameMag.Ins.guide[0]) {
         //     DialogMag.Ins.show(DialogPath.GuideDialog, DialogScript.GuideDialog, [0, 0, cc.v2(0, -230)]);
         // }
@@ -444,6 +444,7 @@ export default class HomeMain extends cc.Component {
                 //     .repeatForever()
                 //     .start();
                 break;
+                
             }
         }
     }

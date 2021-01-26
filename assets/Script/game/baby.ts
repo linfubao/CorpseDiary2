@@ -6,7 +6,8 @@ import ConfigMag, { roleAnimate, mechaAnimate } from "../manage/ConfigMag";
 enum BabyAnimation {
     Stay = "stay",
     Walk = "walk",
-    Hurt = "injured"
+    StayInjured = "stay_injured",
+    WalkInjured = "walk_injured"
 }
 const { ccclass, property } = cc._decorator;
 //要护送的小弟,我叫他baby
@@ -52,7 +53,16 @@ export default class Baby extends cc.Component {
         }
     }
     freshBabyAnimate(action: string, times: number, cb: Function = null) {
+        let self = this;
         ToolsMag.Ins.playDragonBone(this.babyDragon.node, action, times, function () {
+            if (action == BabyAnimation.StayInjured || action == BabyAnimation.WalkInjured) {
+                if (self.walkStatus) {
+                    self.freshBabyAnimate(BabyAnimation.Walk, 0);
+                } else {
+                    self.freshBabyAnimate(BabyAnimation.Stay, 0);
+                }
+                return;
+            }
             cb && cb();
         });
     }
@@ -64,9 +74,11 @@ export default class Baby extends cc.Component {
         AudioMag.getInstance().playSound("被攻击受伤");
         let rate = Number((hurtNum / this.blood).toFixed(2));
         this.bloodBar.progress -= rate;
-        this.freshBabyAnimate(BabyAnimation.Hurt, 0, function () {
-            self.freshBabyAnimate(BabyAnimation.Stay, 0);
-        });
+        if (this.walkStatus) {
+            this.freshBabyAnimate(BabyAnimation.WalkInjured, 0);
+        } else {
+            this.freshBabyAnimate(BabyAnimation.StayInjured, 0);
+        }
         // console.log(this.bloodBar.progress, "血量:", GameMag.Ins.roleBlood);
         if (this.bloodBar.progress <= 0) {
             AudioMag.getInstance().playSound("死亡");

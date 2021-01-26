@@ -489,7 +489,7 @@ export default class GameMag extends cc.Component {
     initUseingData() {
         //skin:使用中的皮肤, gun:当前正在使用的枪, gunEquip:装备中的武器列表,assistEquip:装备中的辅助道具列表,-2:空位
         let data = {
-            skin: 0, gun: 3, mecha: -1, gunEquip: [3, -2, -2, -2], assistEquip: [-2, -2, -2]
+            skin: 0, gun: 3, mecha: -1, gunEquip: [6, -2, -2, -2], assistEquip: [-2, -2, -2]
         };
         let init = cc.sys.localStorage.getItem('useingData');
         if (!init) {
@@ -554,7 +554,7 @@ export default class GameMag extends cc.Component {
     }
     /**
      * 更新装备中的武器列表
-     * @param gunID 直接传入武器id,解除装备直接传-1
+     * @param gunID 直接传入武器id,解除装备直接传-2
      */
     updateUseingDataByGunEquip(gunID, index) {
         let gunEquip = this.useingData.gunEquip;
@@ -581,22 +581,16 @@ export default class GameMag extends cc.Component {
         cc.sys.localStorage.setItem('useingData', JSON.stringify(this.useingData));
     }
     initGunData() {
-        let localGunData = ConfigMag.Ins.getGunData();
+        let cigData = ConfigMag.Ins.getGunData();
         let data = [];
-        localGunData.forEach(item => {
-            let num = null;
-            if (item.gunType == 1) { //非枪械
-                num = -1;
-            } else {
-                num = 0;
-            }
+        cigData.forEach(item => {
             let geted = null;
-            if (item.gunID == 3) {//第一把默认枪
+            if (item.gunID == 6) {//第一把默认枪
                 geted = true;
             } else {
-                geted = true;
+                geted = false;
             }
-            data.push({ gunID: item.gunID, geted: geted, bulletNum: num, lockStatus: item.lockStatus });//bulletNum: 剩余子弹
+            data.push({ gunID: item.gunID, gunLv: 0, geted: geted, power: item.power, speed: item.speed, crit: item.crit, bulletNum: 0, lockStatus: item.lockStatus });//bulletNum: 剩余子弹
         })
         let init = cc.sys.localStorage.getItem('gunData');
         if (!init) {
@@ -630,6 +624,21 @@ export default class GameMag extends cc.Component {
      */
     updateGunDataByBulletNum(id, num) {
         this.gunData[id].bulletNum += num;
+        cc.sys.localStorage.setItem('gunData', JSON.stringify(this.gunData));
+    }
+    /**
+     * 更新武器等级
+     * @param id  直接传入gunID
+     * @param powerUpNum  升级的技能数
+     * @param speedUpNum  升级的技能数
+     * @param critUpNum   升级的技能数
+     */
+    updateGunDataByLevel(id, powerUpNum, speedUpNum, critUpNum) {
+        this.gunData[id].gunLv++;
+        this.gunData[id].power += powerUpNum;
+        this.gunData[id].speed += speedUpNum;
+        this.gunData[id].crit += critUpNum;
+        console.log(this.gunData[id]);
         cc.sys.localStorage.setItem('gunData', JSON.stringify(this.gunData));
     }
     //货币

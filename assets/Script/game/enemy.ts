@@ -228,6 +228,7 @@ export default class Enemy extends cc.Component {
             });
         });
     }
+    //伤害别人
     hurt() {
         if ((this.touchRole || this.touchTongue) && !this.frozen && !this.die) {
             if (this.taskType === 5 || this.taskType === 9) {
@@ -257,6 +258,7 @@ export default class Enemy extends cc.Component {
             })
         })
     }
+    //被别人伤害
     hurted(hurt: number = null) {
         let self = this;
         let normalPower = null;
@@ -265,7 +267,7 @@ export default class Enemy extends cc.Component {
             normalPower = info.power;
         } else {
             let gun = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;
-            const info = ConfigMag.Ins.getGunData()[gun];
+            const info = GameMag.Ins.gunData[gun];
             const talent = this.talentToGun != null ? this.talentToGun : 0;
             normalPower = info.power + (info.power * talent);
         }

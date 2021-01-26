@@ -1,5 +1,6 @@
 import GameMag from "../manage/GameMag";
 import AudioMag from "../manage/AudioMag";
+import ToolsMag from "../manage/ToolsMag";
 import ConfigMag from "../manage/ConfigMag";
 import DialogMag, { DialogPath, DialogScript } from "../manage/DialogMag";
 
@@ -49,13 +50,9 @@ export default class ShopDialog extends cc.Component {
     }
     onBackBtn() {
         AudioMag.getInstance().playSound("按钮音");
-        cc.tween(this.backBtn)
-            .to(0.3, { opacity: 0 })
-            .call(() => {
-                this.backBtn.opacity = 255;
-                DialogMag.Ins.removePlane(DialogPath.ShopDialog);
-            })
-            .start();
+        ToolsMag.Ins.buttonAction(this.backBtn, function () {
+            DialogMag.Ins.removePlane(DialogPath.ShopDialog);
+        }.bind(this));
     }
     updatePage(index) {
         AudioMag.getInstance().playSound("按钮音");

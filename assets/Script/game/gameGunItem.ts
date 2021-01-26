@@ -24,7 +24,6 @@ export default class gameGunItem extends cc.Component {
     cigData: any[] = [];
     recordTryGun: number = null;
 
-
     init(gunID, index, sf) {
         this.index = index;
         this.gunID = gunID;
