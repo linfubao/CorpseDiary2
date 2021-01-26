@@ -1040,6 +1040,30 @@ const enemyData = [
         "finalTime": 90
     }
 ]
+/**
+ * 僵尸商店的兑换配置
+ * zombieType    0:眼睛  1:大脑  2:心脏
+ * costNum       花费几个能兑换
+ * exchangeNum   能兑换到的道具数量
+ * exchangeType  能兑换到的道具下标  0-11是辅助道具的,12:药水,13:钻石
+ */
+
+const zombieShopData = [
+    [
+        { zombieType: 0, costNum: 5, exchangeNum: 1, exchangeType: 0 },
+        { zombieType: 0, costNum: 5, exchangeNum: 1, exchangeType: 2 },
+        { zombieType: 0, costNum: 5, exchangeNum: 1, exchangeType: 6 }
+    ],
+    [
+        { zombieType1: 0, costNum1: 3, zombieType2: 1, costNum2: 3, exchangeNum: 1, exchangeType: 4 },
+        { zombieType1: 1, costNum1: 4, zombieType2: 2, costNum2: 4, exchangeNum: 1, exchangeType: 8 },
+        { zombieType1: 0, costNum1: 5, zombieType2: 2, costNum2: 5, exchangeNum: 1, exchangeType: 10 }
+    ],
+    [
+        { zombieType1: 0, zombieType2: 1, zombieType3: 2, costNum: 5, exchangeNum: 1, exchangeType: 12 },
+        { zombieType1: 0, zombieType2: 1, zombieType3: 2, costNum: 10, exchangeNum: 10, exchangeType: 13 }
+    ]
+];
 const signInData = [500, 1000, 1500, 2000, 3000];
 export enum roleAnimate {
     Stay = "stay",
@@ -1145,6 +1169,9 @@ export default class ConfigMag extends cc.Component {
      */
     getKillReward(): number[] {
         return [20, 50, 100, 200, 500, 800, 1500];
+    }
+    getZombieShopData() {
+        return zombieShopData;
     }
     roleAnimate() {
         let gun = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;

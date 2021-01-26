@@ -32,7 +32,16 @@ export default class gameAssistItem extends cc.Component {
         this.countTime = this.assistTime;
         this.initUI();
         cc.director.on("useingMecha", this.useingMecha, this);
+        cc.director.on("useingUav", this.useingUav, this);
         this.node.on(cc.Node.EventType.TOUCH_END, this.onTouch, this);
+    }
+    useingUav() {
+        if (this.cigData.assistType != 6) return;
+        this.node.pauseSystemEvents(true);
+        this.buffer.node.active = true;
+        this.buffer.progress = 1;
+        this.unschedule(this.countDown);
+        this.schedule(this.countDown, 1);
     }
     initUI() {
         let localData = GameMag.Ins.assistData;
@@ -110,6 +119,13 @@ export default class gameAssistItem extends cc.Component {
                     let machineGun = cc.instantiate(res);
                     machineGun.parent = cc.find("Canvas");
                     machineGun.getComponent("machineGun").init(assistTime);
+                })
+                break;
+            case 6:
+                ToolsMag.Ins.getGameResource("prefab/uav" + this.cigData.assistSize, function (res: cc.Prefab) {
+                    let machineGun = cc.instantiate(res);
+                    machineGun.parent = cc.find("Canvas");
+                    cc.director.emit("useingUav");
                 })
                 break;
             default:

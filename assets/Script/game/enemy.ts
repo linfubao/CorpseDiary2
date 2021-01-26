@@ -46,6 +46,8 @@ export default class Enemy extends cc.Component {
     step2: boolean = false;
     step3: boolean = false;
     testingRole: boolean = null;
+    coinEndNode: cc.Node = null;
+
 
     init(tag, roleNode) {
         this.role = roleNode;
@@ -91,6 +93,7 @@ export default class Enemy extends cc.Component {
         this.defenseBox = this.canvasNode.getChildByName("defenseBox");
         this.babyNode = this.canvasNode.getChildByName("baby");
         this.babyBodyNode = this.canvasNode.getChildByName("baby").getChildByName("body");
+        this.coinEndNode = cc.find("Canvas/info/currency/currency/coin/gold");
         if (this.taskType === 4) { //防御模式
             this.node.scaleX = 1;
         }
@@ -194,9 +197,18 @@ export default class Enemy extends cc.Component {
                 this.hurted(num1);
                 break;
             case 24://辅助道具机枪的子弹
-                GameMag.Ins.putMachineBullet(other.node);
-                const num2 = Number(ConfigMag.Ins.getAssistData()[9].effectNum);
-                this.hurted(num2);
+                if (this.node) {
+                    GameMag.Ins.putMachineBullet(other.node);
+                    const num2 = Number(ConfigMag.Ins.getAssistData()[9].effectNum);
+                    this.hurted(num2);
+                }
+                break;
+            case 26://辅助道具无人机的子弹
+                if (this.node) {
+                    GameMag.Ins.putUavBullet(other.node);
+                    const uavPower = Number(ConfigMag.Ins.getAssistData()[10].effectNum);
+                    this.hurted(uavPower);
+                }
                 break;
             default:
                 break;
@@ -441,7 +453,7 @@ export default class Enemy extends cc.Component {
         this.showRewardNum(rewardNum);
         cc.director.emit("updateGameKillNum");// 更新杀敌数UI,及杀戮提示
         this.showBlood();
-        this.showStageAssist();
+        this.showStage();
     }
     //显示尸块
     showCorpse(index) {
@@ -500,20 +512,26 @@ export default class Enemy extends cc.Component {
             }
         });
     }
-    //游戏中随机出现道具宝箱
-    showStageAssist() {
-        if (GameMag.Ins.gameKillNum % 2 == 0) {//每杀了2个怪就出现一次
-            let flag = Math.random() > 0.1 ? false : true;
-            if (flag) {
-                let self = this;
-                ToolsMag.Ins.getGameResource("prefab/stageBox", function (prefab: cc.Prefab) {
-                    let node = cc.instantiate(prefab);
-                    node.parent = self.canvasNode;
-                    node.x = self.node.x;
-                    node.getComponent("stageBox").init(self.tag);
-                });
-            }
-        }
+    //游戏中随机出现随机道具(辅助道具/机甲/3个收集物)
+    showStage() {
+        let self = this;
+        GameMag.Ins.getStageBox(function (node) {
+            node.parent = self.canvasNode;
+            node.x = self.node.x;
+            node.getComponent("stageBox").init(self.tag);
+        })
+        // if (GameMag.Ins.gameKillNum % 2 == 0) {//每杀了2个怪就出现一次
+        //     let flag = Math.random() > 0.1 ? false : true;
+        //     if (flag) {
+        // let self = this;
+        // ToolsMag.Ins.getGameResource("prefab/stageBox", function (prefab: cc.Prefab) {
+        //     let node = cc.instantiate(prefab);
+        //     node.parent = self.canvasNode;
+        //     node.x = self.node.x;
+        //     node.getComponent("stageBox").init(self.tag);
+        // });
+        //     }
+        // }
     }
     checkKillMission() {
         if (GameMag.Ins.gameKillNum && (GameMag.Ins.gameKillNum < GameMag.Ins.missionData.killNum)) {
@@ -577,15 +595,31 @@ export default class Enemy extends cc.Component {
     showRewardNum(reward: number) {
         if (reward <= 0) return;
         GameMag.Ins.updateCurrency(0, reward);
-        cc.director.emit("updateCurrency");
         let self = this;
+        GameMag.Ins.getRewardClip((node) => {
+            node.parent = self.rewardNumBox;
+            node.stopAllActions();
+            node.scale = 1.3;
+            node.setPosition(self.node.x, 0);
+            cc.tween(node)
+                .to(0.15, { position: cc.v2(node.x, node.y - 85) })
+                .delay(0.6)
+                .to(0.7, { scale: 0.5, position: cc.v2(-440, 220) })
+                .call(() => {
+                    cc.director.emit("updateCurrency");
+                    GameMag.Ins.putRewardClip(node);
+                })
+                .start();
+        });
         GameMag.Ins.getRewardNum((node) => {
             node.parent = self.rewardNumBox;
             node.stopAllActions();
+            node.opacity = 255;
             node.setPosition(self.node.x, 0);
             node.getComponent(cc.Label).string = String("+" + reward);
             cc.tween(node)
-                .to(0.7, { position: cc.v3(node.x, node.y + 120, 0) })
+                .to(0.7, { opacity: 150, position: cc.v2(node.x, node.y + 100) })
+                .to(0.25, { opacity: 0 })
                 .call(() => {
                     GameMag.Ins.putRewardNum(node);
                 })

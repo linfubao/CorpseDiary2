@@ -11,6 +11,7 @@ export enum DialogPath {
     MessageDialog = "prefab/dialog/messageDialog", //轻提示框
     GuideDialog = "prefab/dialog/guideDialog", //新手指导框
     MoreGameDialog = "prefab/dialog/moreGameDialog", //更多游戏弹窗
+    ZombieShopDialog = "prefab/dialog/zombieShopDialog", //僵尸商店
 
 }
 export enum DialogScript {
@@ -24,6 +25,7 @@ export enum DialogScript {
     MessageDialog = "messageDialog",
     GuideDialog = "guideDialog", //新手指导框
     MoreGameDialog = "moreGameDialog", //更多游戏弹窗
+    ZombieShopDialog = "zombieShopDialog", //僵尸商店
 
 }
 

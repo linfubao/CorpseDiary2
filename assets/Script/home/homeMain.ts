@@ -33,6 +33,8 @@ export default class HomeMain extends cc.Component {
     taskBtnLight: cc.Node = null;
     @property({ type: cc.Node, tooltip: "日常任务" })
     taskBtn: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "僵尸商店" })
+    zombieShopBtn: cc.Node = null;
     @property(cc.Label)
     levelLab: cc.Label = null;
     @property({ type: [cc.Vec2], tooltip: "显示任务图标的坐标" })
@@ -78,7 +80,7 @@ export default class HomeMain extends cc.Component {
         // this.startTime = new Date().getTime();
         AudioMag.getInstance().playBGM("BGM");
         cc.director.getCollisionManager().enabled = true;
-        cc.director.getCollisionManager().enabledDebugDraw = true;
+        // cc.director.getCollisionManager().enabledDebugDraw = true;
         cc.director.getPhysicsManager().enabled = true;
         // cc.director.getPhysicsManager().debugDrawFlags = cc.PhysicsManager.DrawBits.e_aabbBit | cc.PhysicsManager.DrawBits.e_jointBit | cc.PhysicsManager.DrawBits.e_shapeBit;
         this.initUI();
@@ -290,7 +292,6 @@ export default class HomeMain extends cc.Component {
         cc.director.on("judgeTaskArrow", this.judgeTaskArrow, this);
         cc.director.on("judgeAchieve", this.judgeAchieve, this);
         this.backBtn.on(cc.Node.EventType.TOUCH_END, this.onBack, this);
-        // this.startBtn.on(cc.Node.EventType.TOUCH_END, this.onStartGame, this);
         this.shopBtn.on(cc.Node.EventType.TOUCH_END, this.onShopBtn, this);
         this.achieveBtn.on(cc.Node.EventType.TOUCH_END, this.onAchieveBtn, this);
         this.taskBtn.on(cc.Node.EventType.TOUCH_END, this.onTaskBtn, this);
@@ -303,6 +304,11 @@ export default class HomeMain extends cc.Component {
         this.moreGameBtn.on(cc.Node.EventType.TOUCH_END, function () {
             ToolsMag.Ins.buttonAction(this.moreGameBtn, function () {
                 DialogMag.Ins.show(DialogPath.MoreGameDialog, DialogScript.MoreGameDialog, ["5fdc89d7d1b5c92d7783632d"]);
+            }.bind(this));
+        }, this);
+        this.zombieShopBtn.on(cc.Node.EventType.TOUCH_END, function () {
+            ToolsMag.Ins.buttonAction(this.zombieShopBtn, function () {
+                DialogMag.Ins.show(DialogPath.ZombieShopDialog, DialogScript.ZombieShopDialog, []);
             }.bind(this));
         }, this);
     }

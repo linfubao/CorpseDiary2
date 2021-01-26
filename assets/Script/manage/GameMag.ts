@@ -85,6 +85,10 @@ export default class GameMag extends cc.Component {
      * 任务列表
      */
     taskTypeArr: number[] = null;
+    /**
+     * 僵尸商店
+     */
+    zombieShopData: any = null;
 
     /*游戏数据*/
     homeScene: string = "Home";
@@ -162,6 +166,7 @@ export default class GameMag extends cc.Component {
         cc.sys.localStorage.removeItem('rewardBuff');
         cc.sys.localStorage.removeItem('uploadData');
         cc.sys.localStorage.removeItem('taskTypeArr');
+        cc.sys.localStorage.removeItem('zombieShop');
     }
     initLocalStorageData() {
         this.initLevel();
@@ -175,6 +180,7 @@ export default class GameMag extends cc.Component {
         this.initAchieveRecordData();
         this.initTaskData();
         this.initTaskTypeArr();
+        this.initZombieShopData();
         // this.initGuide();
         // this.initSignData();
         // this.initReviveTimes();
@@ -182,6 +188,28 @@ export default class GameMag extends cc.Component {
         // this.initUploadData();
 
         // this.initMusicStatus();
+    }
+    /**
+     * 0:眼睛  1:大脑  2:心脏
+     */
+    initZombieShopData() {
+        let init = [0, 0, 0];
+        let data = cc.sys.localStorage.getItem("zombieShop");
+        if (!data) {
+            cc.sys.localStorage.setItem("zombieShop", JSON.stringify(init));
+            this.zombieShopData = init;
+        } else {
+            this.zombieShopData = JSON.parse(data);
+        }
+    }
+    /**
+     * 更新僵尸商店数据
+     * @param index  0:眼睛  1:大脑  2:心脏
+     * @param num   扣除传负数
+     */
+    updateZombieShopData(index, num) {
+        this.zombieShopData[index] += num;
+        cc.sys.localStorage.setItem("zombieShop", JSON.stringify(this.zombieShopData));
     }
     initTaskTypeArr() {
         let data = cc.sys.localStorage.getItem("taskTypeArr");
@@ -816,6 +844,7 @@ export default class GameMag extends cc.Component {
         let gunIndex = this.shopShowGun || gun;
         let armStr: string[] = [];
         let index: number = null;
+        let lv = 0;
         if (gunIndex <= 4 || gunIndex == 6 || gunIndex == 8) {
             armStr = ["arms"];
             if (gunIndex == 6) {
@@ -825,6 +854,22 @@ export default class GameMag extends cc.Component {
             } else {
                 index = gunIndex;
             }
+            // switch (lv) {
+            //     case 0:
+            //         index = 9;
+            //         break;
+            //     case 1:
+            //         index = 10;
+            //         break;
+            //     case 2:
+            //         index = 10;
+            //         break;
+            //     case 3:
+            //         index = 11;
+            //         break;
+            //     default:
+            //         break;
+            // }
         } else {
             armStr = ["arms_1"];
             if (gunIndex == 5) {
@@ -835,6 +880,7 @@ export default class GameMag extends cc.Component {
                 index = gunIndex - 7;
             }
         }
+        // console.log(index, armStr);
         this.loadDisplayIndex(skinArr.concat(armStr), bodyDragon, index);
         cb && cb();
     }
@@ -913,7 +959,12 @@ export default class GameMag extends cc.Component {
     bulletPool: cc.NodePool = null;
     mechaBulletPool: cc.NodePool = null;
     rewardNumPool: cc.NodePool = null;//击杀小怪后漂浮的奖励金额
+    rewardClipPool: cc.NodePool = null;//击杀小怪后漂浮的奖励金额
     skillBlockPool: cc.NodePool = null;//商店的技能小方块
+    machineBulletPool: cc.NodePool = null;//机枪的子弹
+    uavBulletPool: cc.NodePool = null;//无人机的子弹
+    stageBoxPool: cc.NodePool = null;//游戏中怪物死亡随机掉落的物品
+
     initHomePools() {
         let self = this;
         this.skillBlockPool = new cc.NodePool();
@@ -996,13 +1047,17 @@ export default class GameMag extends cc.Component {
         this.enemyPool.push(enemy11);
         this.enemyPool.push(enemy12);
 
-
+        this.rewardClipPool = new cc.NodePool();
         this.rewardNumPool = new cc.NodePool();
-        ToolsMag.Ins.getGameResource("prefab/killRewardNum", function (prefab: cc.Prefab) {
-            let node = cc.instantiate(prefab);
-            for (let i = 0; i < 3; i++) {
-                self.rewardNumPool.put(node);
-            }
+        ToolsMag.Ins.getGameResource("prefab/killRewardClip", function (clipPre: cc.Prefab) {
+            ToolsMag.Ins.getGameResource("prefab/killRewardNum", function (numPre: cc.Prefab) {
+                let clip = cc.instantiate(clipPre);
+                let num = cc.instantiate(numPre);
+                for (let i = 0; i < 3; i++) {
+                    self.rewardClipPool.put(clip);
+                    self.rewardNumPool.put(num);
+                }
+            })
         })
         this.bulletPool = new cc.NodePool();
         ToolsMag.Ins.getGameResource("prefab/bullets/bullet", function (prefab: cc.Prefab) {
@@ -1021,6 +1076,13 @@ export default class GameMag extends cc.Component {
                 }
             })
         }
+        this.stageBoxPool = new cc.NodePool();
+        ToolsMag.Ins.getGameResource("prefab/stageBox", function (prefab: cc.Prefab) {
+            let node = cc.instantiate(prefab);
+            for (let i = 0; i < 2; i++) {
+                self.stageBoxPool.put(node);
+            }
+        })
     }
     getEnemy(tag: number, cb: Function) {
         let node = null;
@@ -1053,6 +1115,21 @@ export default class GameMag extends cc.Component {
     }
     putCorpse(tag, node, cb: Function = null) {
         this.corpsePool[tag].put(node);
+    }
+    getRewardClip(cb: Function) {
+        let node = null;
+        if (this.rewardClipPool.size() > 0) {
+            node = this.rewardClipPool.get();
+            cb && cb(node);
+            return;
+        }
+        ToolsMag.Ins.getGameResource("prefab/killRewardClip", function (prefab: cc.Prefab) {
+            node = cc.instantiate(prefab);
+            cb && cb(node);
+        })
+    }
+    putRewardClip(node) {
+        this.rewardClipPool.put(node);
     }
     getRewardNum(cb: Function) {
         let node = null;
@@ -1099,7 +1176,21 @@ export default class GameMag extends cc.Component {
     putMechaBullet(node) {
         this.mechaBulletPool.put(node);
     }
-    machineBulletPool: cc.NodePool = null;//机枪的子弹
+    getStageBox(cb: Function) {
+        let node = null;
+        if (this.stageBoxPool.size() > 0) {
+            node = this.stageBoxPool.get();
+            cb && cb(node);
+            return;
+        }
+        ToolsMag.Ins.getGameResource("prefab/stageBox", function (prefab: cc.Prefab) {
+            node = cc.instantiate(prefab);
+            cb && cb(node);
+        })
+    }
+    putStageBox(node) {
+        this.stageBoxPool.put(node);
+    }
     initMachineBullet() {
         let self = this;
         this.machineBulletPool = new cc.NodePool();
@@ -1124,6 +1215,31 @@ export default class GameMag extends cc.Component {
     }
     putMachineBullet(node) {
         this.machineBulletPool.put(node);
+    }
+    initUavBullet() {
+        let self = this;
+        this.uavBulletPool = new cc.NodePool();
+        ToolsMag.Ins.getGameResource("prefab/bullets/uavBullet", function (prefab: cc.Prefab) {
+            let node = cc.instantiate(prefab);
+            for (let i = 0; i < 10; i++) {
+                self.uavBulletPool.put(node);
+            }
+        })
+    }
+    getUavBullet(cb: Function) {
+        let node = null;
+        if (this.uavBulletPool.size() > 0) {
+            node = this.uavBulletPool.get();
+            cb && cb(node);
+            return;
+        }
+        ToolsMag.Ins.getGameResource("prefab/bullets/uavBullet", function (prefab: cc.Prefab) {
+            node = cc.instantiate(prefab);
+            cb && cb(node);
+        })
+    }
+    putUavBullet(node) {
+        this.uavBulletPool.put(node);
     }
 }
 /**
@@ -1151,4 +1267,6 @@ export default class GameMag extends cc.Component {
  * 22. 辅助道具机枪的爆炸区域
  * 23. 辅助道具机枪的碰撞检测区域
  * 24. 辅助道具机枪的子弹
+ * 25. 辅助道具无人机的碰撞检测区域
+ * 26. 辅助道具无人机的子弹
  */

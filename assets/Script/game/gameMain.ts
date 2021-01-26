@@ -183,7 +183,6 @@ export default class GameMain extends cc.Component {
     initData() {
         GameMag.Ins.initGamePools();
         this.recordTryGun = GameMag.Ins.tryGun;
-        this.defenseNum = GameMag.Ins.missionData.defenseNum;
         GameMag.Ins.isUseingMecha = false;
         GameMag.Ins.gameOver = false;
         GameMag.Ins.timeOver = false;
@@ -249,6 +248,7 @@ export default class GameMain extends cc.Component {
         cc.director.on("showGameKey", this.showGameKey, this); //钥匙模式随机出现的钥匙
         cc.director.on("hideMecha", this.hideMecha, this); //机甲消失
         cc.director.on("buyBulletTip", this.showBuyBulletTip, this); //显示子弹不足提示
+        cc.director.on("onShowMecha", this.onShowMecha, this); //随机掉落的机甲
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
         this.leftBtn.on(cc.Node.EventType.TOUCH_START, this.onMoveLeftStart, this);
@@ -319,7 +319,7 @@ export default class GameMain extends cc.Component {
         // this.loadEnemy(0);
         // this.loadEnemy(1);
         // this.loadEnemy(2);
-        return
+        // return
         const level = GameMag.Ins.level;
         const enemyData = ConfigMag.Ins.getEnemyData();
         this.enemyData = enemyData;
@@ -754,6 +754,7 @@ export default class GameMain extends cc.Component {
                 this.schedule(this.taskCountDown, 1);
                 break;
             case 4:
+                this.defenseNum = GameMag.Ins.missionData.defenseNum;
                 this.defenseBox.active = true;
                 this.killTextNode.active = true;
                 this.timerTextNode.active = true;
@@ -813,13 +814,22 @@ export default class GameMain extends cc.Component {
     }
     loadGameKey() {
         let _t = Math.floor(Math.random() * (6 - 3) + 3);
-        console.log(_t);
+        // console.log(_t);
         this.scheduleOnce(function () {
             console.log("出钥匙");
             let camera = this.roleCamera;
             let x = camera.x + (camera.width / 2 + 200);
             this.gameKey.x = x;
             this.gameKey.active = true;
+            const iconNode: cc.Node = this.gameKey.getChildByName("icon");
+            let ps = iconNode.position;
+            cc.tween(iconNode)
+                .repeatForever(
+                    cc.tween()
+                        .to(0.5, { position: cc.v3(0, ps.y - 6, 0) })
+                        .to(0.5, { position: cc.v3(0, ps.y + 6, 0) })
+                )
+                .start();
         }.bind(this), _t);
     }
     /**
@@ -997,9 +1007,11 @@ export default class GameMain extends cc.Component {
         this.roleStay();
         this.useAssistMissile(3);
         const missionData = GameMag.Ins.missionData;
-        this.defenseNum = missionData.defenseNum;
         GameMag.Ins.defenseOver = false;
         if (this.taskIndex == 3 || this.taskIndex == 4 || this.taskIndex >= 7) {//和时间相关的模式
+            if (this.taskIndex == 4) {
+                this.defenseNum = missionData.defenseNum;
+            }
             GameMag.Ins.timeOver = false;
             this.unschedule(this.taskCountDown);
             this.secondNum = missionData.secondNum;
@@ -1027,11 +1039,11 @@ export default class GameMain extends cc.Component {
         }, 0.5);
     }
     //使用机甲
-    onShowMecha() {
+    onShowMecha(event, useMecha = null) {
         AudioMag.getInstance().playSound("按钮音");
         if (this.mechaNode || this.mecheShowTime) return;
         const mechaData = GameMag.Ins.mechaData;
-        const id = GameMag.Ins.useingData.mecha;
+        const id = useMecha || GameMag.Ins.useingData.mecha;
         for (let index = 0; index < mechaData.length; index++) {
             const element = mechaData[index];
             if (element.mechaID == id && element.getNum > 0) {
@@ -1210,7 +1222,7 @@ export default class GameMain extends cc.Component {
                 this.onSwitchGun();
                 break;
             case cc.macro.KEY.l:
-                this.onShowMecha();
+                // this.onShowMecha();
                 break;
             case cc.macro.KEY.q:
                 this.onPauseBtn();
@@ -1359,6 +1371,7 @@ export default class GameMain extends cc.Component {
         AudioMag.getInstance().playSound("按钮音");
         this.buttonAction(this.leftBtn);
         if (this.mecheShowTime || GameMag.Ins.gameOver) return true;
+        cc.director.emit("uavMove");//无人机
         this.moveLeft = true;
         if (this.isMoving) {
             this.roleWalk();
@@ -1372,6 +1385,7 @@ export default class GameMain extends cc.Component {
         // console.log("leftEnd");
         this.leftBtn.stopAllActions();
         this.leftBtn.scale = 1;
+        cc.director.emit("uavStop");
         if (this.mecheShowTime || GameMag.Ins.gameOver) return;
         this.moveLeft = false;
         if (!this.moveRight) {
@@ -1383,6 +1397,7 @@ export default class GameMain extends cc.Component {
         AudioMag.getInstance().playSound("按钮音");
         this.buttonAction(this.rightBtn);
         if (this.mecheShowTime || GameMag.Ins.gameOver) return true;
+        cc.director.emit("uavMove");
         this.moveRight = true;
         if (this.isMoving) {
             this.roleWalk();
@@ -1396,6 +1411,7 @@ export default class GameMain extends cc.Component {
         // console.log("rightEnd");
         this.rightBtn.stopAllActions();
         this.rightBtn.scale = 1;
+        cc.director.emit("uavStop");
         if (this.mecheShowTime || GameMag.Ins.gameOver) return;
         this.moveRight = false;
         if (!this.moveLeft) {

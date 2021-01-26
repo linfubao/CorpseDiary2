@@ -21,8 +21,12 @@ export default class GunPage extends cc.Component {
     gunName: cc.Sprite = null;
     @property(cc.Sprite)
     gunDesc: cc.Sprite = null;
-    @property({ type: cc.Node, tooltip: "购买子弹栏" })
+    @property({ type: cc.Node, tooltip: "子弹栏" })
     downContent: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "无限子弹" })
+    endlessNode: cc.Node = null;
+    @property({ type: cc.Node, tooltip: "购买子弹内容" })
+    limitNode: cc.Node = null;
     @property({ type: cc.Label, tooltip: "剩余子弹" })
     bulletNumLab: cc.Label = null;
     @property({ type: cc.Label, tooltip: "买一次子弹增加多少子弹数量" })
@@ -74,7 +78,6 @@ export default class GunPage extends cc.Component {
     }
     initUI() {
         this.skillConfig = GameMag.Ins.skillConfig;
-        this.downContent.active = false;
         this.gunData = ConfigMag.Ins.getGunData();
         this.len = this.gunData.length;
         this.equipData = GameMag.Ins.useingData.gunEquip;
@@ -249,10 +252,10 @@ export default class GunPage extends cc.Component {
         let self = this;
         ToolsMag.Ins.getHomeResource("prefab/shop/gunItem", function (prefab: cc.Prefab) {
             let node = cc.instantiate(prefab);
-            let sf = self.homeAtlas.getSpriteFrame("gun_" + self.index);
             let lv = 0;
-            let gunNameSf = self.homeAtlas.getSpriteFrame(`gunName_${self.index}_${lv}`);
-            node.getComponent("gunItem").init(self.index, self.gunData[self.index], sf, gunNameSf);
+            let gunSf = self.shopAtlas.getSpriteFrame(`gun_${self.index}_${lv}`);
+            let gunNameSf = self.shopAtlas.getSpriteFrame("gunName_" + self.index);
+            node.getComponent("gunItem").init(self.index, self.gunData[self.index], gunSf, gunNameSf);
             node.parent = self.gunBox;
             self.index++;
             if (self.index < self.len) {
@@ -289,19 +292,25 @@ export default class GunPage extends cc.Component {
      * 更新购买子弹栏
      */
     freshDownContent() {
-        let data = this.gunData[this.clickFlag];
+        let cigData = this.gunData[this.clickFlag];
         let localData = GameMag.Ins.gunData[this.clickFlag];
-        let buyOnceCost = data.buyOnceCost;
+        let buyOnceCost = cigData.buyOnceCost;
         let lockStatus = localData.lockStatus;
         let geted = localData.geted;
-        if (buyOnceCost == 0 || !lockStatus || !geted) {
+        if (cigData.gunType === 1 || !geted || !lockStatus) {
             this.downContent.active = false;
-
+            return;
+        }
+        this.downContent.active = true;
+        if (buyOnceCost == 0) {
+            this.endlessNode.active = true;
+            this.limitNode.active = false;
         } else {
-            this.downContent.active = true;
+            this.endlessNode.active = false;
+            this.limitNode.active = true;
             this.bulletNumLab.string = String(`${localData.bulletNum}`);
-            this.onceNumLab.string = String(`+${data.buyOnceNum}`);
-            this.onceCostLab.string = String(`-${data.buyOnceCost}`);
+            this.onceNumLab.string = String(`+${cigData.buyOnceNum}`);
+            this.onceCostLab.string = String(`-${cigData.buyOnceCost}`);
         }
     }
     /**
