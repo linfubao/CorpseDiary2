@@ -12,6 +12,8 @@ export default class FrontGameDialog extends cc.Component {
     @property(cc.SpriteAtlas)
     homeAtlas: cc.SpriteAtlas = null;
     @property(cc.SpriteAtlas)
+    homeMainAtlas: cc.SpriteAtlas = null;
+    @property(cc.SpriteAtlas)
     frontAtlas: cc.SpriteAtlas = null;
     @property(cc.Node)
     left: cc.Node = null;
@@ -27,14 +29,10 @@ export default class FrontGameDialog extends cc.Component {
     coinLab: cc.Label = null;
     @property(cc.Label)
     diamondLab: cc.Label = null;
-    @property(cc.Label)
-    levelLab: cc.Label = null;
     @property(cc.Sprite)
-    title: cc.Sprite = null;
+    mapName: cc.Sprite = null;
     @property(cc.Sprite)
     mapBg: cc.Sprite = null;
-    @property(cc.Sprite)
-    desc: cc.Sprite = null;
     @property(cc.Node)
     endlessImg: cc.Node = null;
     @property(cc.Node)
@@ -81,16 +79,15 @@ export default class FrontGameDialog extends cc.Component {
         let diamondNum = 1 + Math.floor(lv / 10);
         let keyNum = Math.floor(lv / 2);
 
-        this.levelLab.string = String(`第${lv}天`);
-        this.mapBg.spriteFrame = this.frontAtlas.getSpriteFrame("bg" + mapIndex);
-        this.title.spriteFrame = this.frontAtlas.getSpriteFrame("title_" + mapIndex);
-        this.desc.spriteFrame = this.frontAtlas.getSpriteFrame("desc_" + mapIndex);
+        console.log("mapIndex", mapIndex, taskIndex);
+
+        this.mapBg.spriteFrame = this.homeMainAtlas.getSpriteFrame("bg" + mapIndex);
+        this.mapName.spriteFrame = this.homeMainAtlas.getSpriteFrame("mapName_" + mapIndex);
         GameMag.Ins.cleanMissionData();
         let str = "";
         switch (taskIndex) {
             case 0:
                 console.log("无尽模式");
-                str = '';
                 this.endlessImg.active = true;
                 this.rewardContent.active = false;
                 GameMag.Ins.missionData = null;
@@ -118,7 +115,7 @@ export default class FrontGameDialog extends cc.Component {
                 break;
             case 5:
                 console.log("护送模式");
-                str = `任务:护送路人到达直接地点,僵尸不攻击角色，只攻击路人，路人死亡任务失败`;
+                str = `任务:护送路人到达指定地点`;
                 GameMag.Ins.missionData.moveNum = moveNum;
                 break;
             case 6:
@@ -141,28 +138,30 @@ export default class FrontGameDialog extends cc.Component {
                 break;
             case 9:
                 console.log("护送+时间模式");
-                str = `任务: ${secondNum}秒内护送路人到达直接地点`;
+                str = `任务:${secondNum}秒内护送路人到达指定地点`;
                 GameMag.Ins.missionData.secondNum = secondNum;
                 GameMag.Ins.missionData.moveNum = moveNum;
                 break;
             case 10:
                 console.log("钥匙+时间模式");
-                str = `任务: ${secondNum}秒内收集${keyNum}个钥匙`;
+                str = `任务:${secondNum}秒内收集${keyNum}个钥匙`;
                 GameMag.Ins.missionData.secondNum = secondNum;
                 GameMag.Ins.missionData.keyNum = keyNum;
                 break;
             default:
                 break;
         }
+        console.log(str);
         GameMag.Ins.missionData.coinNum = coinNum;
         GameMag.Ins.missionData.diamondNum = diamondNum;
         this.coinLab.string = String(coinNum);
         this.diamondLab.string = String(diamondNum);
-        this.missionLab.string = String(str);
+        this.missionLab.string = str;
     }
     trySkin: number = null;
     //建议使用
     initRecommendUI() {
+        return
         let data = GameMag.Ins.skinData;
         let arr = [];
         data.forEach(item => {
@@ -183,15 +182,14 @@ export default class FrontGameDialog extends cc.Component {
     }
     //出场动效
     showAction() {
+        const height = cc.view.getVisibleSize().height / 2;
         cc.tween(this.left)
-            .to(0.2, { position: cc.v3(220, 0, 0) })
-            .to(0.05, { position: cc.v3(200, 0, 0) })
+            .to(0.2, { position: cc.v3(0, height - 15, 0) })
+            .to(0.05, { position: cc.v3(0, height + 15, 0) })
             .call(() => {
                 cc.tween(this.right)
-                    .to(0.12, { position: cc.v3(230, 0, 0) })
-                    .to(0.05, { position: cc.v3(250, 0, 0) })
-                    .to(0.08, { position: cc.v3(240, 0, 0) })
-                    .to(0.08, { position: cc.v3(250, 0, 0) })
+                    .to(0.12, { position: cc.v3(0, -height + 10, 0) })
+                    .to(0.05, { position: cc.v3(0, -height - 10, 0) })
                     .call(() => {
                         this.showActionEnd = true;
                         // if (!GameMag.Ins.guide[2]) {
@@ -223,10 +221,10 @@ export default class FrontGameDialog extends cc.Component {
         this.trySkin = null;
         ToolsMag.Ins.buttonAction(this.closeBtn, function () {
             cc.tween(this.left)
-                .to(0.2, { position: cc.v3(-750, 0, 0) })
+                .to(0.2, { position: cc.v3(0, 1000, 0) })
                 .start();
             cc.tween(this.right)
-                .to(0.2, { position: cc.v3(750, 0, 0) })
+                .to(0.2, { position: cc.v3(0, -620, 0) })
                 .call(() => {
                     DialogMag.Ins.removePlane(DialogPath.FrontGameDialog);
                 })

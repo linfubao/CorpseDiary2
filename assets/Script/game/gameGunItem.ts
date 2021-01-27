@@ -96,12 +96,13 @@ export default class gameGunItem extends cc.Component {
         } else {
             GameMag.Ins.tryGun = gunList[i];
         }
-
+        console.log(GameMag.Ins.nowGunIndex, GameMag.Ins.lastGunIndex);
+        let arr = this.node.parent.children;
+        this.iconAction(this.icon.node);
 
         // for (let i = 0, len = gunList.length; i < len; i++) {
         //     if (gunList[i] == this.gunID) {
         //         this.actives.active = false;
-        //         let arr = this.node.parent.children;
         //         i++;
         //         let index = null;
         //         if (i < len) {
@@ -217,10 +218,10 @@ export default class gameGunItem extends cc.Component {
             cc.director.emit("buyBulletTip", false);
         }
     }
-    iconAction(node) {
+    iconAction(node: cc.Node) {
         cc.tween(node)
-            .to(0.1, { scale: 1.8 })
-            .to(0.05, { scale: 1.4 })
+            .to(0.1, { scale: 1.25 })
+            .to(0.06, { scale: 1 })
             .start();
     }
 }

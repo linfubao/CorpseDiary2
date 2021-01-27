@@ -93,8 +93,8 @@ export default class GameMain extends cc.Component {
     killingTip: cc.Sprite = null;
     @property(cc.Node)
     runLogo: cc.Node = null;
-    @property({ type: cc.PolygonCollider, tooltip: "武器的碰撞体" })
-    weapon: cc.PolygonCollider = null;
+    @property({ type: cc.Node, tooltip: "棍棒类武器的碰撞体" })
+    weaponCollider: cc.Node = null;
     @property({ type: cc.Sprite, tooltip: "吃了随机出现的辅助道具后出现在头上的玩意" })
     assistStatus: cc.Sprite = null;
     @property({ type: cc.Prefab, tooltip: "导弹(复活/道具)" })
@@ -341,7 +341,7 @@ export default class GameMain extends cc.Component {
         this.loadSchedule1(enemyData[1]);
         // if (GameMag.Ins.switchData && !GameMag.Ins.switchData.blood) return; //绿色模式不出下面的怪
         this.loadSchedule2(enemyData[2]);
-        // if (level < 5) return;
+        if (level < 5) return;
         this.loadSchedule3(enemyData[3]);
         this.loadSchedule4(enemyData[4]);
         this.loadSchedule5(enemyData[5]);
@@ -879,8 +879,8 @@ export default class GameMain extends cc.Component {
             console.log("增加几屏", diff);
         }
         for (let i = 0; i <= diff; i++) {
-            // let node = cc.instantiate(this.bgs[GameMag.Ins.mapIndex]);
-            let node = cc.instantiate(this.bgs[0]);
+            let node = cc.instantiate(this.bgs[GameMag.Ins.mapIndex]);
+            // let node = cc.instantiate(this.bgs[0]);
             node.parent = this.bgBox;
         }
         //然后更新地板长度
@@ -1326,7 +1326,6 @@ export default class GameMain extends cc.Component {
     roleFire() {
         let animate = null;
         let self = this;
-        let flag: number = null;
         if (this.mechaNode) {
             if (this.isMoving()) {
                 animate = mechaAnimate.WalkFire;
@@ -1345,21 +1344,29 @@ export default class GameMain extends cc.Component {
             });
             return;
         }
-        if (this.isMoving()) {
-            flag = 3;
-        } else {
-            flag = 1;
-        }
+        // if (this.isMoving()) {
+        //     flag = 3;
+        // } else {
+        //     flag = 1;
+        // }
+        let flag: number = !this.isMoving() ? 1 : 3;
         let useGun = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;
-        if (useGun <= 2 || useGun == 18) {
+        if (useGun <= 5) {
             //棒子类武器举起来的时候再打开碰撞体
-            this.scheduleOnce(() => {
-                this.weapon.enabled = true;
-            }, 0.2);
+            this.weaponCollider.angle = 70;
+            this.weaponCollider.active = true;
+            this.weaponCollider.stopAllActions();
+            cc.tween(this.weaponCollider)
+                .to(0.35, { angle: 0 })
+                .call(() => {
+                    this.weaponCollider.active = false;
+                    this.weaponCollider.angle = 70;
+                })
+                .start();
         }
         this.freshRole(flag, 1, function () {
-            if (useGun <= 2 || useGun == 18) {
-                self.weapon.enabled = false;
+            if (useGun <= 5) {
+                self.weaponCollider.active = false;
             } else if (useGun == 15 || useGun == 16) {
                 self.bulletBox.removeAllChildren();
             }
@@ -1648,24 +1655,24 @@ export default class GameMain extends cc.Component {
         let x = this.role.x;
         let index = null;
         let root: string = null; //0:普通子弹 1:冰/火枪子弹 2:爆炸子弹大 3:爆炸子弹小(MGL) 4.穿透型(狙击和激光)
-        if (useGun == 15) {//火子弹
+        if (useGun == 24) {//火子弹
             root = "fireAndiceBullet";
             // x = this.role.x;
             index = 0;
-        } else if (useGun == 16) {
+        } else if (useGun == 25) {
             root = "fireAndiceBullet";
             // x = this.role.x;
             index = 1;
-        } else if (useGun == 19 || useGun == 21) {
+        } else if (useGun == 22) {
             root = "boomBullet";//爆炸型子弹大
             // x = this.role.x;
             index = 2;
-        } else if (useGun == 20) {
+        } else if (useGun == 21) {
             root = "boomMGLBullet";//爆炸型子弹小
             // x = this.role.x;
             index = 3;
-        } else if (useGun == 17 || useGun == 23) {
-            root = "passBullet";//穿透型子弹(激光枪,狙击枪)
+        } else if (useGun == 26 || useGun == 27 || useGun == 28 || useGun == 29) {
+            root = "passBullet";//穿透型子弹(激光枪,狙击枪/泡泡枪)
             // x = this.role.x;
             index = 4;
         } else {
@@ -1733,11 +1740,11 @@ export default class GameMain extends cc.Component {
             dis = 500;
         } else { //常规枪支的蛋壳
             shellsNode.setPosition(this.role.x, -30);
-            let gun = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;
-            if (gun == 11 || gun == 12) {
+            let gun = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;            
+            if (gun == 19 || gun == 20) {
                 shellsIndex = 1;
             } else {
-                shellsIndex = 0;
+                shellsIndex = 0;//普通枪蛋壳
             }
             ps = cc.v2(0, -60);
             dis = 400;

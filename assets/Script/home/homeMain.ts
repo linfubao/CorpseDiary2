@@ -18,8 +18,6 @@ export default class HomeMain extends cc.Component {
     @property(cc.Node)
     taskArrow: cc.Node = null;
     @property(cc.Node)
-    achieveCup: cc.Node = null;
-    @property(cc.Node)
     backBtn: cc.Node = null;
     @property(cc.Node)
     startBtn: cc.Node = null;
@@ -37,8 +35,10 @@ export default class HomeMain extends cc.Component {
     zombieShopBtn: cc.Node = null;
     @property(cc.Label)
     levelLab: cc.Label = null;
+    @property({ type: cc.Node, tooltip: "" })
+    taskLight: cc.Node = null;
     @property({ type: [cc.Vec2], tooltip: "显示任务图标的坐标" })
-    taskPos: cc.Vec2[] = []; //从左到右
+    taskPos: cc.Vec2[] = []; 
     @property(cc.Node)
     taskBox: cc.Node = null;
     @property(cc.Prefab)
@@ -372,8 +372,6 @@ export default class HomeMain extends cc.Component {
         }.bind(this));
     }
     onAchieveBtn() {
-        this.achieveCup.stopAllActions();
-        this.achieveCup.opacity = 255;
         ToolsMag.Ins.buttonAction(this.achieveBtn, function () {
             DialogMag.Ins.show(DialogPath.AchieveDialog, DialogScript.AchieveDialog, []);
         }.bind(this));
@@ -444,7 +442,6 @@ export default class HomeMain extends cc.Component {
                 //     .repeatForever()
                 //     .start();
                 break;
-                
             }
         }
     }
@@ -569,13 +566,14 @@ export default class HomeMain extends cc.Component {
         GameMag.Ins.taskTypeArr = initArr;
         let arr = [0, 1, 2, 3, 4, 5];//主页地图坐标的下标
         if (lv == 1) {
-            arr = [0]; //第一关固定放在第一个位置
+            arr = [3]; //第一关固定放在第一个位置
         } else {
             arr.sort(() => Math.random() - 0.5);
         }
         let psArr = arr.slice(0, initArr.length);//随机分配坐标位置   
         console.log(psArr);
         for (let i = 0; i < initArr.length; i++) {
+            this.taskLight.children[psArr[i]].active = true;
             let node = this.taskBox.children[initArr[i]];
             let ps = this.taskPos[psArr[i]];
             // if (!GameMag.Ins.guide[1]) {
@@ -586,9 +584,9 @@ export default class HomeMain extends cc.Component {
             node.active = true;
             node.setPosition(ps);
             node.getComponent("task").init(initArr[i], psArr[i]);//任务编号,地图编号(逆时针)
-            let circle = cc.instantiate(this.circle);
-            circle.setPosition(ps.x, ps.y - 90);
-            circle.parent = this.node;
+            // let circle = cc.instantiate(this.circle);
+            // circle.setPosition(ps.x, ps.y - 90);
+            // circle.parent = this.node;
         }
     }
 }

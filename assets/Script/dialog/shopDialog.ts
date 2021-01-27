@@ -18,7 +18,7 @@ export default class ShopDialog extends cc.Component {
     @property(cc.Node)
     buyBtn: cc.Node = null;
 
-    initIndex: number = 0; //初始界面下标
+    initIndex: number = 1; //初始界面下标
     lastIndex: number = null;
     nowIndex: number = null;
     initPs: cc.Vec3[] = [];

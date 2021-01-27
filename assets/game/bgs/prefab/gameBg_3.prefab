@@ -22,16 +22,19 @@
       },
       {
         "__id__": 5
+      },
+      {
+        "__id__": 8
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 8
+        "__id__": 11
       }
     ],
     "_prefab": {
-      "__id__": 9
+      "__id__": 12
     },
     "_opacity": 255,
     "_color": {
@@ -43,7 +46,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 2500,
+      "width": 3750,
       "height": 750
     },
     "_anchorPoint": {
@@ -82,7 +85,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "BG3-1",
+    "_name": "bg3-1",
     "_objFlags": 0,
     "_parent": {
       "__id__": 1
@@ -119,7 +122,7 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        -625,
+        -1250,
         0,
         0,
         0,
@@ -160,7 +163,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "692e80eb-0780-4bdb-afd2-05f32c09ebd9"
+      "__uuid__": "7943d524-62ef-40cf-9652-04de519a32ec"
     },
     "_type": 0,
     "_sizeMode": 1,
@@ -184,12 +187,12 @@
     "asset": {
       "__uuid__": "7e1ff608-968b-42a3-b779-6d53480ae8f8"
     },
-    "fileId": "52ygRgulhCYpCtl+tWCusM",
+    "fileId": "72Ik+9ZSJMG6XHoqlhSGpB",
     "sync": false
   },
   {
     "__type__": "cc.Node",
-    "_name": "BG3-2",
+    "_name": "bg3-2",
     "_objFlags": 0,
     "_parent": {
       "__id__": 1
@@ -226,7 +229,7 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        625,
+        0,
         0,
         0,
         0,
@@ -267,7 +270,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "f8c7d26a-56ae-4fb3-bf8f-0c5d4edfeeb7"
+      "__uuid__": "9f3a938c-8343-44d9-ae51-cb497fc71d18"
     },
     "_type": 0,
     "_sizeMode": 1,
@@ -291,7 +294,114 @@
     "asset": {
       "__uuid__": "7e1ff608-968b-42a3-b779-6d53480ae8f8"
     },
-    "fileId": "7cYHheC31Ic7F4fteSYMQg",
+    "fileId": "09UaHj9ApBY6D4VOtzIirJ",
+    "sync": false
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "bg3-3",
+    "_objFlags": 0,
+    "_parent": {
+      "__id__": 1
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 9
+      }
+    ],
+    "_prefab": {
+      "__id__": 10
+    },
+    "_opacity": 255,
+    "_color": {
+      "__type__": "cc.Color",
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "a": 255
+    },
+    "_contentSize": {
+      "__type__": "cc.Size",
+      "width": 1250,
+      "height": 750
+    },
+    "_anchorPoint": {
+      "__type__": "cc.Vec2",
+      "x": 0.5,
+      "y": 0.5
+    },
+    "_trs": {
+      "__type__": "TypedArray",
+      "ctor": "Float64Array",
+      "array": [
+        1250,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "_eulerAngles": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_skewX": 0,
+    "_skewY": 0,
+    "_is3DNode": false,
+    "_groupIndex": 0,
+    "groupIndex": 0,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.Sprite",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 8
+    },
+    "_enabled": true,
+    "_materials": [
+      {
+        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
+      }
+    ],
+    "_srcBlendFactor": 770,
+    "_dstBlendFactor": 771,
+    "_spriteFrame": {
+      "__uuid__": "18fa9f82-0264-4d9f-819a-0c94fbb0cfca"
+    },
+    "_type": 0,
+    "_sizeMode": 1,
+    "_fillType": 0,
+    "_fillCenter": {
+      "__type__": "cc.Vec2",
+      "x": 0,
+      "y": 0
+    },
+    "_fillStart": 0,
+    "_fillRange": 0,
+    "_isTrimmedMode": true,
+    "_atlas": null,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.PrefabInfo",
+    "root": {
+      "__id__": 1
+    },
+    "asset": {
+      "__uuid__": "7e1ff608-968b-42a3-b779-6d53480ae8f8"
+    },
+    "fileId": "e1Fi6vZyxFwpdEDabkVrPT",
     "sync": false
   },
   {
@@ -304,8 +414,8 @@
     "_enabled": true,
     "_layoutSize": {
       "__type__": "cc.Size",
-      "width": 300,
-      "height": 200
+      "width": 3750,
+      "height": 750
     },
     "_resize": 1,
     "_N$layoutType": 1,

@@ -97,7 +97,10 @@ export default class SkinPage extends cc.Component {
             node.parent = self.skinBox;
             self.index++;
             if (self.index < self.len) {
+                self.showRole(ConfigMag.Ins.getSkinData()[self.index]);
                 self.loadItem();
+            } else {
+                self.showRole(ConfigMag.Ins.getSkinData()[0]);
             }
         })
     }
@@ -146,24 +149,29 @@ export default class SkinPage extends cc.Component {
         cc.director.emit("freshSkinItemActive", data.index);
     }
     showRole(data) {
-        return;
         let gun = 0;
         GameMag.Ins.shopShowSkin = data.skinID;
         switch (data.skinID) {
             case 0:
-                gun = 4;
+                gun = 7;
                 break;
             case 1:
-                gun = 18;
+                gun = 4;
                 break;
             case 2:
-                gun = 9;
+                gun = 17;
                 break;
             case 3:
-                gun = 11;
+                gun = 19;
                 break;
             case 4:
                 gun = 2;
+                break;
+            case 5:
+                gun = 5;
+                break;
+            case 6:
+                gun = 13;
                 break;
             default:
                 break;
@@ -174,8 +182,9 @@ export default class SkinPage extends cc.Component {
         this.unschedule(this.fire1);
         this.unschedule(this.fire2_cb);
         this.unschedule(this.fire2);
-        if (gun <= 2 || gun == 18) {
-            this.schedule(this.fire1, 2.5);
+        const gunCigData = ConfigMag.Ins.getGunData()[gun];
+        if (gunCigData.gunType === 1) {
+            this.schedule(this.fire1, 2);
         } else {
             this.schedule(this.fire2, 3);
         }
@@ -189,6 +198,11 @@ export default class SkinPage extends cc.Component {
         }, 0.5);
     }
     //枪类
+    fire2() {
+        this.unschedule(this.fire2_cb);
+        this.schedule(this.fire2_cb, 0.8, 1);
+    }
+    //枪类
     fire2_cb() {
         GameMag.Ins.playGunSound();
         this.freshRole(1, 1);
@@ -196,11 +210,6 @@ export default class SkinPage extends cc.Component {
         this.scheduleOnce(() => {
             this.freshRole(0, 0);
         }, 0.7);
-    }
-    //拿枪的
-    fire2() {
-        this.unschedule(this.fire2_cb);
-        this.schedule(this.fire2_cb, 0.8, 1);
     }
     /**
      * 切换龙骨
@@ -230,24 +239,35 @@ export default class SkinPage extends cc.Component {
         this.freshRoleDragon(action, times);
     }
     freshRoleDragon(action, times, cb: Function = null) {
-        let self = this;
-        GameMag.Ins.changeSkin(this.bodyDragon, function () {
-            ToolsMag.Ins.playDragonBone(self.bodyDragon.node, action, times, function () {
+        const bodyNode = this.roleContent.children[GameMag.Ins.shopShowSkin].getChildByName("body");
+        const footNode = this.roleContent.children[GameMag.Ins.shopShowSkin].getChildByName("foot");
+        const bodyDragon = bodyNode.getComponent(dragonBones.ArmatureDisplay);
+        const footDragon = footNode.getComponent(dragonBones.ArmatureDisplay);
+        GameMag.Ins.changeSkin(bodyDragon, function () {
+            ToolsMag.Ins.playDragonBone(bodyNode, action, times, function () {
                 cb && cb();
             });
         });
-        GameMag.Ins.changeFoot(this.footDragon);
-        ToolsMag.Ins.playDragonBone(this.footDragon.node, "stay", 0, function () { }.bind(this));
+        GameMag.Ins.changeFoot(footDragon);
+        ToolsMag.Ins.playDragonBone(footNode, "stay", 0, function () { }.bind(this));
+        // let self = this;
+        // GameMag.Ins.changeSkin(this.bodyDragon, function () {
+        //     ToolsMag.Ins.playDragonBone(self.bodyDragon.node, action, times, function () {
+        //         cb && cb();
+        //     });
+        // });
+        // GameMag.Ins.changeFoot(this.footDragon);
+        // ToolsMag.Ins.playDragonBone(this.footDragon.node, "stay", 0, function () { }.bind(this));
     }
     showFireShells() {
         let shellsNode = cc.instantiate(this.bulletShellsPre);
         shellsNode.getComponent(cc.RigidBody).linearVelocity = cc.v2(-400, 350);
         shellsNode.parent = this.shellsBox;
         const shopShowGun = GameMag.Ins.shopShowGun;
-        if (shopShowGun == 11) {
-            shellsNode.children[1].active = true;
+        if (shopShowGun == 19) {
+            shellsNode.children[1].active = true; //散弹枪蛋壳
         } else {
-            shellsNode.children[0].active = true;
+            shellsNode.children[0].active = true; //普通枪蛋壳
         }
         let a = Math.random() > 0.5 ? 1 : -1;
         let agnle = 150 + Math.random() * 50;

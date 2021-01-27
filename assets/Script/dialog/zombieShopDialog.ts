@@ -12,6 +12,10 @@ export default class ZombieShopDialog extends cc.Component {
     @property(cc.SpriteAtlas)
     homeAtlas: cc.SpriteAtlas = null;
     @property(cc.Node)
+    upNode: cc.Node = null;
+    @property(cc.Node)
+    buttomNode: cc.Node = null;
+    @property(cc.Node)
     content: cc.Node = null;
     @property(cc.Node)
     closeBtn: cc.Node = null;
@@ -25,16 +29,34 @@ export default class ZombieShopDialog extends cc.Component {
     onInit() {
         this.freshZombieNum();
         this.freshRewardUI();
+        this.showAction();
         this.closeBtn.on(cc.Node.EventType.TOUCH_END, function () {
             ToolsMag.Ins.buttonAction(this.closeBtn, function () {
                 DialogMag.Ins.removePlane(DialogPath.ZombieShopDialog);
             }.bind(this));
         }, this);
     }
+    //出场动效
+    showAction() {
+        // const height = cc.view.getVisibleSize().height / 2;
+        cc.tween(this.buttomNode)
+            .to(0.2, { position: cc.v3(0, -90, 0) })
+            .to(0.05, { position: cc.v3(0, -100, 0) })
+            .call(() => {
+                cc.tween(this.upNode)
+                    .to(0.12, { position: cc.v3(0, 260, 0) })
+                    .to(0.05, { position: cc.v3(0, 270, 0) })
+                    .call(() => {
+                        
+                    })
+                    .start();
+            })
+            .start();
+    }
     freshZombieNum() {
         const zombieShopData = GameMag.Ins.zombieShopData;
         zombieShopData.forEach((item, index) => {
-            this.getNumBox.children[index].getComponent(cc.Label).string = String("X" + item);
+            this.getNumBox.children[index].getComponent(cc.Label).string = String("x" + item);
         });
     }
     freshRewardUI() {

@@ -1781,62 +1781,127 @@ export default class ConfigMag extends cc.Component {
     getZombieShopData() {
         return zombieShopData;
     }
+    // roleAnimate() {
+    //     let gun = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;
+    //     let gunID = GameMag.Ins.shopShowGun || gun;
+    //     let actions = { die: "", fire: "", stay: "", walk: "", walkFire: "" };
+    //     let str = ""; //  die/stay/walk/walk
+    //     let str2 = "";//  fire/walk_fire
+    //     if (gunID == 3 || gunID == 4 || gunID == 6 || gunID == 8) {
+    //         str = "";
+    //     } else if (gunID == 0 || gunID == 1 || gunID == 2) {
+    //         str = "_0";
+    //     } else if (gunID == 7 || gunID == 9 || gunID == 10 || gunID == 13 || gunID == 14 || gunID == 15 || gunID == 16 || gunID == 17 || gunID == 20 || gunID == 23) {
+    //         str = "_1";
+    //     } else if (gunID == 5) {
+    //         str = "_2";
+    //     } else if (gunID == 11) {
+    //         str = "_3";
+    //     } else if (gunID == 12) {
+    //         str = "_4";
+    //     } else if (gunID == 18) {
+    //         str = "_5";
+    //     } else if (gunID == 19 || gunID == 21) {
+    //         str = "_6";
+    //     } else if (gunID == 22) {
+    //         str = "_7";
+    //     }
+    //     if (gunID == 3 || gunID == 4 || gunID == 8) {
+    //         str2 = "";
+    //     } else if (gunID == 0 || gunID == 1 || gunID == 2) {
+    //         str2 = "_0";
+    //     } else if (gunID == 6) {
+    //         str2 = "_1";
+    //     } else if (gunID == 7) {
+    //         str2 = "_2";
+    //     } else if (gunID == 5) {
+    //         str2 = "_3";
+    //     } else if (gunID == 9 || gunID == 10 || gunID == 13 || gunID == 14) {
+    //         str2 = "_4";
+    //     } else if (gunID == 11) {
+    //         str2 = "_5";
+    //     } else if (gunID == 12) {
+    //         str2 = "_6";
+    //     } else if (gunID == 15) {
+    //         str2 = "_7";
+    //     } else if (gunID == 16) {
+    //         str2 = "_8";
+    //     } else if (gunID == 17) {
+    //         str2 = "_9";
+    //     } else if (gunID == 18) {
+    //         str2 = "_10";
+    //     } else if (gunID == 19 || gunID == 21) {
+    //         str2 = "_11";
+    //     } else if (gunID == 20) {
+    //         str2 = "_12";
+    //     } else if (gunID == 22) {
+    //         str2 = "_13";
+    //     } else if (gunID == 23) {
+    //         str2 = "_14";
+    //     }
+    //     actions.die = "die" + str;
+    //     actions.stay = "stay" + str;
+    //     actions.walk = "walk" + str;
+    //     actions.fire = "fier" + str2;
+    //     actions.walkFire = "walk_fier" + str2;
+    //     return actions;
+    // }
     roleAnimate() {
         let gun = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;
         let gunID = GameMag.Ins.shopShowGun || gun;
         let actions = { die: "", fire: "", stay: "", walk: "", walkFire: "" };
-        let str = "";
-        let str2 = "";
-        if (gunID == 3 || gunID == 4 || gunID == 6 || gunID == 8) {
+        let str = ""; //  die/stay/walk
+        let str2 = "";//  fire/walk_fire
+        if (gunID == 6 || gunID == 7 || gunID == 8 || gunID == 10 || gunID == 23) {
             str = "";
-        } else if (gunID == 0 || gunID == 1 || gunID == 2) {
+        } else if (gunID == 0 || gunID == 2 || gunID == 5) {
             str = "_0";
-        } else if (gunID == 7 || gunID == 9 || gunID == 10 || gunID == 13 || gunID == 14 || gunID == 15 || gunID == 16 || gunID == 17 || gunID == 20 || gunID == 23) {
+        } else if ((gunID >= 11 && gunID <= 17) || (gunID >= 24 && gunID <= 29) || gunID == 21) {
             str = "_1";
-        } else if (gunID == 5) {
+        } else if (gunID == 9) {
             str = "_2";
-        } else if (gunID == 11) {
+        } else if (gunID == 19) {
             str = "_3";
-        } else if (gunID == 12) {
+        } else if (gunID == 20) {
             str = "_4";
-        } else if (gunID == 18) {
+        } else if (gunID == 1 || gunID == 3 || gunID == 4) {
             str = "_5";
-        } else if (gunID == 19 || gunID == 21) {
-            str = "_6";
         } else if (gunID == 22) {
+            str = "_6";
+        } else if (gunID == 18) {
             str = "_7";
         }
-        if (gunID == 3 || gunID == 4 || gunID == 8) {
+        if (gunID == 6 || gunID == 7 || gunID == 8 || gunID == 23) {
             str2 = "";
-        } else if (gunID == 0 || gunID == 1 || gunID == 2) {
+        } else if (gunID == 0 || gunID == 2 || gunID == 5) {
             str2 = "_0";
-        } else if (gunID == 6) {
+        } else if (gunID == 10) {
             str2 = "_1";
-        } else if (gunID == 7) {
-            str2 = "_2";
-        } else if (gunID == 5) {
-            str2 = "_3";
-        } else if (gunID == 9 || gunID == 10 || gunID == 13 || gunID == 14) {
-            str2 = "_4";
         } else if (gunID == 11) {
+            str2 = "_2";
+        } else if (gunID == 9) {
+            str2 = "_3";
+        } else if ((gunID >= 12 && gunID <= 17) || gunID == 26) {
+            str2 = "_4";
+        } else if (gunID == 19) {
             str2 = "_5";
-        } else if (gunID == 12) {
-            str2 = "_6";
-        } else if (gunID == 15) {
-            str2 = "_7";
-        } else if (gunID == 16) {
-            str2 = "_8";
-        } else if (gunID == 17) {
-            str2 = "_9";
-        } else if (gunID == 18) {
-            str2 = "_10";
-        } else if (gunID == 19 || gunID == 21) {
-            str2 = "_11";
         } else if (gunID == 20) {
-            str2 = "_12";
+            str2 = "_6";
+        } else if (gunID == 24) {
+            str2 = "_7";
+        } else if (gunID == 25) {
+            str2 = "_8";
+        } else if (gunID == 27) {
+            str2 = "_9";
+        } else if (gunID == 1 || gunID == 3 || gunID == 4) {
+            str2 = "_10";
         } else if (gunID == 22) {
+            str2 = "_11";
+        } else if (gunID == 21) {
+            str2 = "_12";
+        } else if (gunID == 18) {
             str2 = "_13";
-        } else if (gunID == 23) {
+        } else if (gunID == 28 || gunID == 29) {
             str2 = "_14";
         }
         actions.die = "die" + str;

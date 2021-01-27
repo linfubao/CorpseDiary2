@@ -40,7 +40,7 @@ export default class StageBox extends cc.Component {
     }
     initUI() {
         this.stageAssist.stopAllActions();
-        const num = Math.floor(Math.random() * 150);
+        const num = Math.floor(Math.random() * 200);
         if (num <= 11) {
             this.showAssist();
         } else if (num >= 12 && num <= 18) {
@@ -60,7 +60,7 @@ export default class StageBox extends cc.Component {
             if (this.node) {
                 GameMag.Ins.putStageBox(this.node);
             }
-        }, 20);
+        }, 12);
     }
     stageIconAction() {
         let ps = this.stageAssist.position;
@@ -150,14 +150,15 @@ export default class StageBox extends cc.Component {
         if (other.tag === 2) {
             if (this.assistData) {
                 this.useAssist();
-                return;
             }
             if (this.mechaData) {
                 cc.director.emit("onShowMecha", this.mechaData.mechaID);
-                return;
             }
             if (this.zombieData >= 0) {
                 GameMag.Ins.updateZombieShopData(this.zombieData, 1);
+            }
+            if (this.node) {
+                GameMag.Ins.putStageBox(this.node);
             }
         }
     }

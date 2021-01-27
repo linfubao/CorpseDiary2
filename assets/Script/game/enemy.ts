@@ -141,7 +141,6 @@ export default class Enemy extends cc.Component {
                 break;
             case 10://棍棒类武器
                 if (self.tag == 16) return; //舌头区域不伤害
-                other.enabled = false;
                 this.hurted();
                 break;
             case 11://穿透性子弹

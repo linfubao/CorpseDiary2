@@ -10,14 +10,15 @@ export default class Task extends cc.Component {
 
     taskIndex: number = null;// 0:无尽模式 1:击杀模式 2:距离模式 3:时间模式  4:击杀+时间模式 5:距离+时间模式
     mapIndex: number = null;
+
     init(taskIndex, mapIndex) {
         this.taskIndex = taskIndex;
         this.mapIndex = mapIndex;
         let ps = this.node.position;
         let action = cc.repeatForever(
             cc.sequence(
-                cc.moveTo(0.7, ps.x, ps.y - 6),
-                cc.moveTo(0.7, ps.x, ps.y + 6)
+                cc.moveTo(0.7, ps.x, ps.y - 3),
+                cc.moveTo(0.7, ps.x, ps.y + 3)
             )
         );
         this.node.scale = 0;

@@ -850,54 +850,98 @@ export default class GameMag extends cc.Component {
         let skinArr: string[] = ["chest", "front_coat", "forearm", "back_arm", "back_coat", "broken_head", "head", "forearm", "forearm_1", "forehand", "forehand_1", "backhand_1", "backhand", "back_arm"];
         let gun = this.tryGun === null ? this.useingData.gun : this.tryGun;
         // console.log("龙骨gun:",gun);
-        let gunIndex = this.shopShowGun || gun;
+        let gunIndex = this.shopShowGun || gun;//当前显示的这把枪
         let armStr: string[] = [];
         let index: number = null;
-        let lv = 0;
-        if (gunIndex <= 4 || gunIndex == 6 || gunIndex == 8) {
+        // if (gunIndex <= 4 || gunIndex == 6 || gunIndex == 8) {
+        //     armStr = ["arms"];
+        //     if (gunIndex == 6) {
+        //         index = 5;
+        //     } else if (gunIndex == 8) {
+        //         index = 6;
+        //     } else {
+        //         index = gunIndex;
+        //     }
+        // } else {
+        //     armStr = ["arms_1"];
+        //     if (gunIndex == 5) {
+        //         index = 0;
+        //     } else if (gunIndex == 7) {
+        //         index = 1;
+        //     } else {
+        //         index = gunIndex - 7;
+        //     }
+        // }
+        let gunLv = this.gunData[gunIndex].gunLv;
+        let arr1 = [0, 2, 5, 6, 7, 8, 10, 23]; //8把
+        let arr2 = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [9, 10, 11],
+            [12, 13, 14],
+            [15, 16, 17],
+            [18, 19, 20],
+            [21, 22, 23]
+        ];
+        let arr3 = [1, 3, 4, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29]; //22把
+        let arr4 = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [9, 10, 11],
+            [12, 13, 14],
+            [15, 16, 17],
+            [18, 19, 20],
+            [21, 22, 23],
+            [24, 25, 26],
+            [27, 28, 29],
+            [30, 31, 32],
+            [33, 34, 35],
+            [36, 37, 38],
+            [39, 40, 41],
+            [42, 43, 44],
+            [45, 46, 47],
+            [48, 49, 50],
+            [51, 52, 53],
+            [54, 55, 56],
+            [57, 58, 59],
+            [60, 61, 62],
+            [63, 64, 65]
+        ];
+        let resArr = [];
+        const res = arr1.indexOf(gunIndex);
+        if (res >= 0) {
             armStr = ["arms"];
-            if (gunIndex == 6) {
-                index = 5;
-            } else if (gunIndex == 8) {
-                index = 6;
-            } else {
-                index = gunIndex;
-            }
-            // switch (lv) {
-            //     case 0:
-            //         index = 9;
-            //         break;
-            //     case 1:
-            //         index = 10;
-            //         break;
-            //     case 2:
-            //         index = 10;
-            //         break;
-            //     case 3:
-            //         index = 11;
-            //         break;
-            //     default:
-            //         break;
-            // }
+            resArr = arr2[res];
         } else {
             armStr = ["arms_1"];
-            if (gunIndex == 5) {
-                index = 0;
-            } else if (gunIndex == 7) {
-                index = 1;
-            } else {
-                index = gunIndex - 7;
-            }
+            const rest = arr3.indexOf(gunIndex);
+            resArr = arr4[rest];
         }
-        // console.log(index, armStr);
+        switch (gunLv) {
+            case 0:
+                index = resArr[0];
+                break;
+            case 1:
+                index = resArr[1];
+                break;
+            case 2:
+                index = resArr[1];
+                break;
+            case 3:
+                index = resArr[2];
+                break;
+            default:
+                break;
+        }
         this.loadDisplayIndex(skinArr.concat(armStr), bodyDragon, index);
         cb && cb();
     }
     //脚龙骨
     changeFoot(footDragon: dragonBones.ArmatureDisplay, cb: Function = null) {
         let legArr: string[] = ["forelegs", "hind_leg"];
-        // let skinIndex = GameMag.Ins.trySkin || (this.shopShowSkin === null ? this.useingData.skin : this.shopShowSkin);
-        let skinIndex = 0;
+        let skinIndex = GameMag.Ins.trySkin || (this.shopShowSkin === null ? this.useingData.skin : this.shopShowSkin);
         for (let i = 0, len = legArr.length; i < len; i++) {
             let robotArmature = footDragon.armature();
             let robotSlot = robotArmature.getSlot(legArr[i]);
@@ -906,8 +950,7 @@ export default class GameMag extends cc.Component {
         cb && cb();
     }
     loadDisplayIndex(strArr: string[], target: dragonBones.ArmatureDisplay, gunIndex: number = null) {
-        // let skinIndex = GameMag.Ins.trySkin || (this.shopShowSkin === null ? this.useingData.skin : this.shopShowSkin);
-        let skinIndex = 0;
+        let skinIndex = GameMag.Ins.trySkin || (this.shopShowSkin === null ? this.useingData.skin : this.shopShowSkin);
         for (let i = 0, len = strArr.length; i < len; i++) {
             let robotArmature = target.armature();
             let robotSlot = robotArmature.getSlot(strArr[i]);
@@ -922,6 +965,7 @@ export default class GameMag extends cc.Component {
      * 武器音效
      */
     playGunSound() {
+        return;
         let str = null;
         let num = this.tryGun === null ? this.useingData.gun : this.tryGun;
         let gun = this.shopShowGun || num;

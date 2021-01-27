@@ -233,9 +233,7 @@
     ],
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
-    "_spriteFrame": {
-      "__uuid__": "455f2842-d69a-4677-9691-b5bf8a5a80c7"
-    },
+    "_spriteFrame": null,
     "_type": 0,
     "_sizeMode": 1,
     "_fillType": 0,
@@ -247,9 +245,7 @@
     "_fillStart": 0,
     "_fillRange": 0,
     "_isTrimmedMode": true,
-    "_atlas": {
-      "__uuid__": "71bd0d4f-dc87-4b3e-813b-fa309a6aa380"
-    },
+    "_atlas": null,
     "_id": ""
   },
   {
@@ -570,9 +566,7 @@
     ],
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
-    "_spriteFrame": {
-      "__uuid__": "aa566b5b-9b3d-4ceb-b8a7-679f61ec6e77"
-    },
+    "_spriteFrame": null,
     "_type": 0,
     "_sizeMode": 1,
     "_fillType": 0,
@@ -584,9 +578,7 @@
     "_fillStart": 0,
     "_fillRange": 0,
     "_isTrimmedMode": true,
-    "_atlas": {
-      "__uuid__": "71bd0d4f-dc87-4b3e-813b-fa309a6aa380"
-    },
+    "_atlas": null,
     "_id": ""
   },
   {
@@ -793,9 +785,7 @@
     ],
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
-    "_spriteFrame": {
-      "__uuid__": "0866d670-65a7-4456-ad30-f334b9f19227"
-    },
+    "_spriteFrame": null,
     "_type": 0,
     "_sizeMode": 1,
     "_fillType": 0,
@@ -807,9 +797,7 @@
     "_fillStart": 0,
     "_fillRange": 0,
     "_isTrimmedMode": true,
-    "_atlas": {
-      "__uuid__": "71bd0d4f-dc87-4b3e-813b-fa309a6aa380"
-    },
+    "_atlas": null,
     "_id": ""
   },
   {
@@ -942,6 +930,8 @@
       "__id__": 1
     },
     "_enabled": true,
+    "coinNode": null,
+    "diamondNode": null,
     "coinLab": {
       "__id__": 7
     },
