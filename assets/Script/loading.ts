@@ -79,6 +79,7 @@ export default class Loading extends cc.Component {
     }
     // text: string = null;
     fun() {
+        if (this.falseBar.getChildByName("bar").width > 870) return;
         this.falseBar.getChildByName("bar").width += 1;
         // let num = this.falseBar.getChildByName("bar").width;
         // this.text = ((num / 300) * 100).toFixed(0);

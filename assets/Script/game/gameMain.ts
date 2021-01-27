@@ -1164,8 +1164,6 @@ export default class GameMain extends cc.Component {
             inNode = body.getChildByName("in");//身体
             upNode = body.getChildByName("up");
             GameMag.Ins.loadDisplayIndex(["lead"], inNode.getComponent(dragonBones.ArmatureDisplay), skin);//切换机甲上的头
-            ToolsMag.Ins.playDragonBone(lowNode, action, times, null);
-            ToolsMag.Ins.playDragonBone(upNode, action, times, null);
             if (action == mechaAnimate.WalkFire) {
                 ToolsMag.Ins.playDragonBone(inNode, action, times, function () {
                     if (self.isMoving()) {
@@ -1176,6 +1174,8 @@ export default class GameMain extends cc.Component {
                 });
                 return;
             }
+            ToolsMag.Ins.playDragonBone(lowNode, action, times, null);
+            ToolsMag.Ins.playDragonBone(upNode, action, times, null);
             ToolsMag.Ins.playDragonBone(inNode, action, times, function () {
                 cb && cb();
             }.bind(this));
@@ -1602,7 +1602,7 @@ export default class GameMain extends cc.Component {
         this.fire();
         let gun = GameMag.Ins.tryGun === null ? GameMag.Ins.useingData.gun : GameMag.Ins.tryGun;
         let cigData = ConfigMag.Ins.getGunData()[gun];
-        if (cigData.gunDescType == 3) {//全自动武器可以长按连发
+        if (cigData.gunDescType == 2) {//全自动武器可以长按连发
             let gunData = ConfigMag.Ins.getGunData();
             let info = gunData[gun];
             let diff = 1 / info.speed * 1000;

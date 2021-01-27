@@ -19,21 +19,22 @@ export default class GunEquip extends cc.Component {
         this.gunID = gunID;
         this.freshGunIcon(gunID);
         cc.director.on("freshGunIcon", this.freshGunIcon, this);
+        cc.director.on("refreshGunIcon" + this.index, this.refreshGunIcon, this);
         cc.director.on("upGunEquip" + index, this.upGunEquip, this);
         cc.director.on("downGunEquip" + index, this.downGunEquip, this);
         this.node.on(cc.Node.EventType.TOUCH_END, this.onStartTouch, this);
     }
-    //fresh:关闭升级界面的标记而已
-    freshGunIcon(gunID, fresh = null) { 
+    freshGunIcon(gunID) {
         if (gunID < 0) return;
-        if (fresh && gunID != this.gunID) { 
-            return;
-        }
         let gunLv = GameMag.Ins.gunData[gunID].gunLv;
         if (gunLv === 2) {
             gunLv = 1;
         }
         this.icon.spriteFrame = this.shopAtlas.getSpriteFrame(`gun_${gunID}_${gunLv}`);
+    }
+    //关闭升级界面的时候更新
+    refreshGunIcon(gunID) {
+        this.freshGunIcon(gunID);
     }
     //武器装备
     upGunEquip(gunID) {

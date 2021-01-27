@@ -95,6 +95,12 @@ export default class Baby extends cc.Component {
             this.body.scaleX = scaleX;
         }
     }
+    onCollisionExit(other, self) {
+        if (other.tag == 2) {
+            const scaleX = this.roleBody.scaleX < 0 ? -1 : 1;
+            this.body.scaleX = scaleX;
+        }
+    }
     update(dt) {
         let babyX = this.node.x;
         const diff = this.role.x - babyX; //主角和baby之间的距离

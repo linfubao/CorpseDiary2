@@ -638,7 +638,6 @@ export default class GameMag extends cc.Component {
         this.gunData[id].power += powerUpNum;
         this.gunData[id].speed += speedUpNum;
         this.gunData[id].crit += critUpNum;
-        console.log(this.gunData[id]);
         cc.sys.localStorage.setItem('gunData', JSON.stringify(this.gunData));
     }
     //货币
@@ -965,7 +964,6 @@ export default class GameMag extends cc.Component {
      * 武器音效
      */
     playGunSound() {
-        return;
         let str = null;
         let num = this.tryGun === null ? this.useingData.gun : this.tryGun;
         let gun = this.shopShowGun || num;
@@ -1005,7 +1003,8 @@ export default class GameMag extends cc.Component {
             str = "镭射枪";
         }
         // console.log("枪音效", str);
-        AudioMag.getInstance().playSound(str);
+        // AudioMag.getInstance().playSound(str);
+        AudioMag.getInstance().playSound("AK");
     }
     corpsePool: cc.NodePool[] = [];
     enemyPool: cc.NodePool[] = [];

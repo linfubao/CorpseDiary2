@@ -347,9 +347,6 @@ export default class Enemy extends cc.Component {
         } else {
             if (this.frozen || this.die || GameMag.Ins.gameOver) return;
             this.hurtedAction();
-            if (this.tag == 2) { //眼镜怪被射击不直接死的话速度会瞬间加快
-                this.speed = 600;
-            }
             const actions = this.judgeEnemyStatus();
             if (this.touchRole) {
                 // console.log(this.attackComplete);

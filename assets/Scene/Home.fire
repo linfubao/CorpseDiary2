@@ -240,7 +240,7 @@
       "array": [
         0,
         0,
-        534.3303375566522,
+        475.4414186687229,
         0,
         0,
         0,
@@ -5439,7 +5439,7 @@
       "__id__": 114
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 116
@@ -6277,7 +6277,7 @@
       "__id__": 132
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 134
@@ -12160,7 +12160,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 0,
-      "height": 5
+      "height": 6.3
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -12217,9 +12217,7 @@
     "_fontSize": 5,
     "_lineHeight": 5,
     "_enableWrapText": true,
-    "_N$file": {
-      "__uuid__": "61ab3af5-e784-42db-a6e6-4b3af59490c6"
-    },
+    "_N$file": null,
     "_isSystemFontUsed": false,
     "_spacingX": 0,
     "_batchAsBitmap": false,
@@ -12589,7 +12587,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 0,
-      "height": 5
+      "height": 6.3
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -12646,9 +12644,7 @@
     "_fontSize": 5,
     "_lineHeight": 5,
     "_enableWrapText": true,
-    "_N$file": {
-      "__uuid__": "61ab3af5-e784-42db-a6e6-4b3af59490c6"
-    },
+    "_N$file": null,
     "_isSystemFontUsed": false,
     "_spacingX": 0,
     "_batchAsBitmap": false,
@@ -12756,7 +12752,6 @@
     "taskArrow": {
       "__id__": 120
     },
-    "achieveCup": null,
     "backBtn": {
       "__id__": 123
     },

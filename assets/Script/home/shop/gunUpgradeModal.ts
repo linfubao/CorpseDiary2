@@ -66,7 +66,11 @@ export default class GunUpgradeModal extends cc.Component {
         this.closeBtn.on(cc.Node.EventType.TOUCH_END, function () {
             cc.director.emit("freshGunPageUI", this.gunCigData);
             cc.director.emit("freshGunItemUI");
-            cc.director.emit("freshGunIcon", gunID, true);
+            const gunEquip = GameMag.Ins.useingData.gunEquip;
+            const i = gunEquip.indexOf(gunID);
+            if (i >= 0) {
+                cc.director.emit("refreshGunIcon" + i, gunID);
+            }
             this.node.active = false;
         }, this);
     }
@@ -87,9 +91,9 @@ export default class GunUpgradeModal extends cc.Component {
             target.x = 0;
             target.scale = 4;
             cc.tween(target)
-                .to(0.2, { scale: 1.9, opacity: 255 })
-                .to(0.05, { scale: 2.1 })
-                .to(0.05, { scale: 2 })
+                .to(0.2, { scale: 1.4, opacity: 255 })
+                .to(0.05, { scale: 1.6 })
+                .to(0.05, { scale: 1.5 })
                 .start();
             this.downContent.active = false;
             this.gunIcon.node.active = false;
@@ -98,6 +102,8 @@ export default class GunUpgradeModal extends cc.Component {
             this.arrowNode.active = false;
             return;
         }
+        this.nextGunIcon.node.scale = 1;
+        this.nextGunIcon.node.x = 173;
         let lv = null, nextLv = null;
         if (gunLv === 0) {
             lv = 0;

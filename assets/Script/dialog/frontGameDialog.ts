@@ -79,8 +79,6 @@ export default class FrontGameDialog extends cc.Component {
         let diamondNum = 1 + Math.floor(lv / 10);
         let keyNum = Math.floor(lv / 2);
 
-        console.log("mapIndex", mapIndex, taskIndex);
-
         this.mapBg.spriteFrame = this.homeMainAtlas.getSpriteFrame("bg" + mapIndex);
         this.mapName.spriteFrame = this.homeMainAtlas.getSpriteFrame("mapName_" + mapIndex);
         GameMag.Ins.cleanMissionData();
@@ -151,7 +149,6 @@ export default class FrontGameDialog extends cc.Component {
             default:
                 break;
         }
-        console.log(str);
         GameMag.Ins.missionData.coinNum = coinNum;
         GameMag.Ins.missionData.diamondNum = diamondNum;
         this.coinLab.string = String(coinNum);
